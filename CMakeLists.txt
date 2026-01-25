@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
 
 # ----------------------------------------
-# 插件信息
+# 插件信息，改了记得改src/global.hpp
 # ----------------------------------------
 set(TEAM_NAME LModel)
 set(PLUGIN_REPO_URL "https://github.com/team_name/repo_name")

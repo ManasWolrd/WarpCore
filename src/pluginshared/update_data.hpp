@@ -1,13 +1,11 @@
 #pragma once
-#include <semaphore>
 #include <juce_core/juce_core.h>
+#include "global.hpp"
 
 namespace pluginshared {
 class UpdateData {
 public:
     static constexpr int kNetworkTimeout = 500; // ms
-    static constexpr auto kReleasePageURL = "https://github.com/a5632645/dev-plugins/releases";
-    static constexpr auto kReleaseJsonFile = "https://raw.githubusercontent.com/a5632645/dev-plugins/refs/heads/main/release.json";
 
     UpdateData() {
         is_thread_run_ = update_thread_.startThread();
@@ -38,104 +36,90 @@ public:
     bool HaveNewVersion() const {
         return update_thread_.have_new_version_;
     }
+
+    static juce::String GetPluginReleaseUrl() {
+        return juce::String::formatted("https://github.com/%s/%s/releases/latest", global::kPluginRepoOwnerName,
+                                       global::kPluginRepoName);
+    }
 private:
     class UpdateThread : public juce::Thread {
     public:
         UpdateThread()
-            : juce::Thread("version check")
-        {}
-    
+            : juce::Thread("version check") {}
+
         void run() override {
             for (;;) {
-                get_sem_.acquire();
+                get_sem_.wait();
                 if (threadShouldExit()) {
                     return;
                 }
-    
-                // get release json from github
-                juce::URL::InputStreamOptions op{juce::URL::ParameterHandling::inAddress};
-                auto stream = juce::URL{kReleaseJsonFile}
-                    .createInputStream(op.withConnectionTimeoutMs(kNetworkTimeout));
-        
+
+                juce::String api_url = juce::String::formatted("https://api.github.com/repos/%s/%s/releases/latest",
+                                                               global::kPluginRepoOwnerName, global::kPluginRepoName);
+                juce::URL url(api_url);
+
+                auto op =
+                    juce::URL::InputStreamOptions{juce::URL::ParameterHandling::inAddress}
+                        .withConnectionTimeoutMs(kNetworkTimeout)
+                        .withExtraHeaders(juce::String::formatted("User-Agent: %s_Updater", global::kPluginRepoName));
+                auto stream = url.createInputStream(op);
+
                 if (!stream) {
-                    SetUpdateMessage("network error");
+                    SetUpdateMessage("Network error or API rate limit");
                     SetButtonLabel("ok");
                     is_complete_ = true;
                     continue;
                 }
-        
-                auto version_string = stream->readEntireStreamAsString();
-                auto json = juce::JSON::fromString(version_string);
-                if (!json.isArray()) {
-                    SetUpdateMessage("payload error");
-                    SetButtonLabel("ok");
-                    is_complete_ = true;
-                    continue;
-                }
-        
-                auto* array = json.getArray();
-                if (!array) {
-                    SetUpdateMessage("payload error");
-                    SetButtonLabel("ok");
-                    is_complete_ = true;
-                    continue;
-                }
-        
-                bool find_data = false;
-                for (auto const& plugin : *array) {
-                    auto plugin_name = plugin.getProperty("name", "");
-                    if (!plugin_name.isString()) {
-                        continue;
-                    }
-                    if (!plugin_name.toString().equalsIgnoreCase(JucePlugin_Name)) {
-                        continue;
-                    }
-        
-                    auto version = plugin.getProperty("version", JucePlugin_VersionString);
-                    if (!version.isString()) {
-                        SetUpdateMessage("payload error");
+
+                // 解析 JSON
+                auto response = stream->readEntireStreamAsString();
+                auto json = juce::JSON::fromString(response);
+
+                if (json.isObject()) {
+                    // 获取最新版本号，例如 "v1.2.0"
+                    juce::String latest_version = json.getProperty("tag_name", "").toString();
+
+                    // GitHub 标签通常带 'v'，对比前处理掉
+                    juce::String current_version = JucePlugin_VersionString;
+
+                    if (latest_version.startsWithIgnoreCase("v")) latest_version = latest_version.substring(1);
+
+                    if (latest_version != current_version) {
+                        juce::String msg;
+                        msg << "New version available: " << latest_version << "\n"
+                            << "Current version: " << current_version;
+                        SetUpdateMessage(msg);
                         SetButtonLabel("ok");
-                        break;
-                    }
-                    if (version.toString().equalsIgnoreCase(JucePlugin_VersionString)) {
-                        SetUpdateMessage("you are using the newest plugin");
-                        SetButtonLabel("ok");
-                        find_data = true;
-                        break;
+                        have_new_version_ = true;
                     }
                     else {
-                        auto changelog = plugin.getProperty("changelog", "").toString();
-                        juce::String s;
-                        s << "new version avaliable: " << version.toString() << "\n";
-                        s << "chanelog:\n" << changelog;
-                        SetUpdateMessage(s);
+                        SetUpdateMessage("You are up to date.");
                         SetButtonLabel("ok");
-                        have_new_version_ = true;    
-                        find_data = true;
+                        have_new_version_ = false;
                     }
                 }
-        
-                if (!find_data) {
-                    SetUpdateMessage("payload error");
+                else {
+                    SetUpdateMessage("Payload error from GitHub");
                     SetButtonLabel("ok");
                 }
+
                 is_complete_ = true;
             }
         }
-    
+
         void BeginCheck() {
             is_complete_ = false;
             have_new_version_ = false;
-            get_sem_.release();
+            get_sem_.signal();
             {
                 juce::ScopedLock lock{data_lock_};
                 update_message_.clear();
                 button_text_.clear();
             }
         }
-    
+
         void Quit() {
-            get_sem_.release();
+            get_sem_.signal();
             stopThread(-1);
         }
 
@@ -162,7 +146,7 @@ private:
         friend class UpdateData;
         std::atomic<bool> is_complete_{false};
         std::atomic<bool> have_new_version_{false};
-        std::binary_semaphore get_sem_{0};
+        juce::WaitableEvent get_sem_{0};
         juce::CriticalSection data_lock_;
         juce::String update_message_;
         juce::String button_text_;
@@ -171,4 +155,4 @@ private:
     UpdateThread update_thread_;
     bool is_thread_run_{};
 };
-}
+} // namespace pluginshared

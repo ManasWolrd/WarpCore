@@ -39,6 +39,7 @@ private:
             label.setColour(juce::TextEditor::ColourIds::backgroundColourId, ui::green_bg);
             label.setColour(juce::TextEditor::ColourIds::textColourId, ui::black_bg);
             label.setText("checking update");
+            label.setMultiLine(true);
             addAndMakeVisible(label);
             button.setButtonText("cancel");
             addAndMakeVisible(button);
