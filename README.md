@@ -3,6 +3,17 @@
 
 推荐使用Ninja Multi-Config和clang/GCC编译器, 优化比MSVC好很多.  
 
+# 克隆到本地
+```bash
+git clone --recurse-submodules https://github.com/L-MODEL-TEST/l-model-plugin-template.git
+```
+或者
+```bash
+git clone https://github.com/L-MODEL-TEST/l-model-plugin-template.git
+cd l-model-plugin-template
+git submodule update --init --recursive
+```
+
 ## MacOS授权
 
 ```bash
@@ -10,10 +21,10 @@ sudo xattr -dr com.apple.quarantine /path/to/your/plugins/plugin_name.component
 sudo xattr -dr com.apple.quarantine /path/to/your/plugins/plugin_name.vst3
 sudo xattr -dr com.apple.quarantine /path/to/your/plugins/plugin_name.lv2
 ```
-## Build
+## 构建
 
 ```bash
-git clone --recurse-submodules https://github.com/this_repo.git
+git clone --recurse-submodules https://github.com/L-MODEL-TEST/l-model-plugin-template.git
 
 # windows
 cmake -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -S . -B ./build
