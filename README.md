@@ -1,7 +1,7 @@
-# l-model plugin template
+# plugin template
 或许是吧, visual studio/vs code/clion直接打开这个文件夹等cmake配置就行了.  
 
-推荐使用Ninja Multi-Config和clang/GCC编译器, 优化比MSVC好很多.  
+推荐使用Ninja和clang/GCC编译器, 优化比MSVC好很多.  
 
 # 克隆到本地
 ```bash
