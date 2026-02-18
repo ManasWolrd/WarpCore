@@ -1,5 +1,4 @@
 #pragma once
-
 #include "pluginshared/component.hpp"
 #include "pluginshared/preset_panel.hpp"
 
@@ -23,4 +22,8 @@ private:
         }
     }
     pluginshared::PresetPanel preset_;
+
+    ui::Dial warp_{"warp"};
+    ui::Dial f_low_{"scale"};
+    ui::Dial f_high_{"f_high"};
 };

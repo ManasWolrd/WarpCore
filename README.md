@@ -1,7 +1,12 @@
-# plugin template
-或许是吧, visual studio/vs code/clion直接打开这个文件夹等cmake配置就行了.  
+# WarpCore
+建议先了解一下 prosoniq piwarp 或者 zynaptiq wormhole 插件的效果样子  
+WarpCore是一个在**没有反编译**的情况下[构思](doc/warp.md)出的`多段频谱反转`插件，类似于piwarp/wormhole的`时域局部频谱反转`效果  
 
-推荐使用Ninja和clang/GCC编译器, 优化比MSVC好很多.  
+## todolist
+- [ ] 优化cpu
+- [ ] 修改频率参数适配可变采样率
+- [ ] 添加分频器来不对其他频率进行反转
+- [ ] 添加warp tilt/pitch带来的共振峰移动效果
 
 # 克隆到本地
 ```bash

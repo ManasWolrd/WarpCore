@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.22.1)
 # 插件信息，改了记得改src/global.hpp
 # ----------------------------------------
 set(TEAM_NAME ManasWorld)
-set(PLUGIN_REPO_URL "https://github.com/ManasWorld/plugin-template")
-set(PLUGIN_NAME plugin-template)
+set(PLUGIN_REPO_URL "https://github.com/ManasWorld/WarpCore")
+set(PLUGIN_NAME WarpCore)
 set(PLUGIN_VERSION 0.0.1)
 set(PLUGIN_BUNDLE_ID "com.manasworld.${PLUGIN_NAME}")
 

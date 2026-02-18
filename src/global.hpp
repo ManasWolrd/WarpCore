@@ -3,6 +3,6 @@
 namespace global {
 
 static constexpr auto kPluginRepoOwnerName = "ManasWorld";
-static constexpr auto kPluginRepoName = "plugin-template";
+static constexpr auto kPluginRepoName = "WarpCore";
 
 }
