@@ -2,7 +2,11 @@
 建议先了解一下 prosoniq piwarp 或者 zynaptiq wormhole 插件的效果样子  
 WarpCore是一个在**没有反编译**的情况下[构思](doc/warp.md)出的`多段频谱反转`插件，类似于piwarp/wormhole的`时域局部频谱反转`效果  
 
+> [!WARNING]
+> 此插件正在开发中
+
 ## todolist
+- [ ] 双声道处理
 - [ ] 优化cpu
 - [ ] 修改频率参数适配可变采样率
 - [ ] 添加分频器来不对其他频率进行反转
