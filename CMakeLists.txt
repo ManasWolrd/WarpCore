@@ -65,12 +65,13 @@ juce_add_plugin(${PROJECT_NAME}
     LV2URI ${PLUGIN_REPO_URL}
 )
 
-# 添加源文件
-file(GLOB_RECURSE src
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+target_sources(${PROJECT_NAME}
+PRIVATE
+    src/dsp/dispatch.cpp
+    src/ui/plugin_ui.cpp
+    src/PluginEditor.cpp
+    src/PluginProcessor.cpp
 )
-target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 # 头文件目录
 target_include_directories(${PROJECT_NAME}
@@ -163,3 +164,10 @@ endif()
 if(DEFINED DBUILD_IN_CI)
     target_compile_definitions(${PROJECT_NAME} PRIVATE DBUILD_IN_CI=1)
 endif()
+
+# ----------------------------------------
+# cpp_simd_detector
+# ----------------------------------------
+set(CPP_SIMD_DETECTOR_BUILD_EXAMPLES OFF)
+add_subdirectory(libs/cpp_simd_detector)
+target_link_libraries(${PROJECT_NAME} PUBLIC cpp_simd_detector)

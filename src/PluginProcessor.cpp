@@ -22,7 +22,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         );
         param_listener_.Add(p, [this](int v) {
             param_.bands = v;
-            param_.changed = true;
+            param_changed_ = true;
         });
         layout.add(std::move(p));
     }
@@ -34,7 +34,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         );
         param_listener_.Add(p, [this](float v) {
             param_.f_low = v;
-            param_.changed = true;
+            param_changed_ = true;
         });
         layout.add(std::move(p));
     }
@@ -42,11 +42,11 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"f_high", 1},
             "f_high",
-            juce::NormalisableRange<float>{0.0f, 40000.0f, 0.4f}, 20000.0f
+            juce::NormalisableRange<float>{40.0f, 40000.0f, 0.4f}, 20000.0f
         );
         param_listener_.Add(p, [this](float v) {
             param_.f_high = v;
-            param_.changed = true;
+            param_changed_ = true;
         });
         layout.add(std::move(p));
     }
@@ -54,11 +54,11 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"scale", 1},
             "scale",
-            juce::NormalisableRange<float>{0.01f, 10.0f, 0.01f}, 1.0f
+            juce::NormalisableRange<float>{0.1f, 10.0f, 0.01f}, 1.0f
         );
         param_listener_.Add(p, [this](float v) {
-            param_.scale = v;
-            param_.changed = true;
+            param_.filter_scale = v;
+            param_changed_ = true;
         });
         layout.add(std::move(p));
     }
@@ -68,6 +68,8 @@ EmptyAudioProcessor::EmptyAudioProcessor()
     preset_manager_ = std::make_unique<pluginshared::PresetManager>(*value_tree_, *this, pluginshared::UpdateData::GithubInfo{
         global::kPluginRepoOwnerName, global::kPluginRepoName
     });
+
+    dsp_ = warpcore::CreateDsp();
 }
 
 EmptyAudioProcessor::~EmptyAudioProcessor() {
@@ -134,8 +136,8 @@ void EmptyAudioProcessor::changeProgramName(int index, const juce::String& newNa
 //==============================================================================
 void EmptyAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     float fs = static_cast<float>(sampleRate);
-    dsp_.Init(fs);
-    dsp_.Reset();
+    dsp_->Init(fs);
+    dsp_->Reset();
     param_listener_.MarkAll();
 }
 
@@ -169,16 +171,17 @@ bool EmptyAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) con
 void EmptyAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
     juce::ScopedNoDenormals noDenormals;
     param_listener_.HandleDirty();
-    if (param_.changed) {
-        dsp_.Update(param_);
-        param_.changed = false;
+    if (param_changed_.exchange(false)) {
+        use_param_ = param_;
+        use_param_.filter_order = 2;
+        dsp_->Update(use_param_);
     }
 
     int const num_samples = buffer.getNumSamples();
     float* left_ptr = buffer.getWritePointer(0);
     float* right_ptr = buffer.getWritePointer(1);
 
-    dsp_.Process(left_ptr, right_ptr, num_samples);
+    dsp_->Process(left_ptr, right_ptr, num_samples);
 }
 
 //==============================================================================

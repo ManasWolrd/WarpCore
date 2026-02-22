@@ -7,3 +7,6 @@
 [submodule "src/pluginshared"]
 	path = src/pluginshared
 	url = https://github.com/ManasWolrd/pluginshared.git
+[submodule "libs/cpp_simd_detector"]
+	path = libs/cpp_simd_detector
+	url = https://github.com/DeltaPavonis/cpp_simd_detector.git

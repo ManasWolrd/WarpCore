@@ -48,8 +48,10 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState> value_tree_;
     std::unique_ptr<pluginshared::PresetManager> preset_manager_;
 
-    warpcore::WarpCore dsp_;
-    warpcore::WarpCore::Param param_;
+    std::unique_ptr<warpcore::IWarpCore> dsp_;
+    warpcore::IWarpCore::Param use_param_;
+    warpcore::IWarpCore::Param param_;
+    std::atomic<bool> param_changed_ = false;
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EmptyAudioProcessor)
