@@ -18,7 +18,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterInt>(
             juce::ParameterID{"warp", 1},
             "warp",
-            1, 512, 64
+            1, warpcore::WarpCore::kMaxBands, 64
         );
         param_listener_.Add(p, [this](int v) {
             param_.bands = v;
@@ -42,7 +42,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"f_high", 1},
             "f_high",
-            juce::NormalisableRange<float>{0.0f, 40000.0f, 0.4f}, 20000.0f
+            juce::NormalisableRange<float>{0.0f, 40000.0f, 0.4f}, 40000.0f
         );
         param_listener_.Add(p, [this](float v) {
             param_.f_high = v;
@@ -54,7 +54,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"scale", 1},
             "scale",
-            juce::NormalisableRange<float>{0.01f, 10.0f, 0.01f}, 1.0f
+            juce::NormalisableRange<float>{0.1f, 5.0f, 0.01f}, 1.0f
         );
         param_listener_.Add(p, [this](float v) {
             param_.scale = v;

@@ -2,13 +2,16 @@
 #include <cmath>
 #include <complex>
 #include <numbers>
+#include <array>
 
 namespace warpcore {
 class SvfTPT {
 public:
     void Reset() noexcept {
-        s1_ = 0;
-        s2_ = 0;
+        s1_l_ = 0;
+        s2_l_ = 0;
+        s1_r_ = 0;
+        s2_r_ = 0;
     }
 
     /**
@@ -25,21 +28,29 @@ public:
         SetCoeffSVF(w, 1 / Q);
     }
 
-    std::complex<float> TickLowpass(std::complex<float> x) noexcept {
-        auto bp = d_ * (g_ * (x - s2_) + s1_);
-        auto v1 = bp - s1_;
-        auto v2 = g_ * bp;
-        auto lp = v2 + s2_;
-        s1_ = bp + v1;
-        s2_ = lp + v2;
-        return lp;
+    std::array<std::complex<float>, 2> TickLowpass(std::complex<float> left, std::complex<float> right) noexcept {
+        auto bp_l = d_ * (g_ * (left - s2_l_) + s1_l_);
+        auto bp_r = d_ * (g_ * (right - s2_r_) + s1_r_);
+        auto v1_l = bp_l - s1_l_;
+        auto v1_r = bp_r - s1_r_;
+        auto v2_l = g_ * bp_l;
+        auto v2_r = g_ * bp_r;
+        auto lp_l = v2_l + s2_l_;
+        auto lp_r = v2_r + s2_r_;
+        s1_l_ = bp_l + v1_l;
+        s1_r_ = bp_r + v1_r;
+        s2_l_ = lp_l + v2_l;
+        s2_r_ = lp_r + v2_r;
+        return {lp_l, lp_r};
     }
 private:
     float R2_{};
     float g_{};
     float d_{};
-    std::complex<float> s1_{};
-    std::complex<float> s2_{};
+    std::complex<float> s1_l_{};
+    std::complex<float> s2_l_{};
+    std::complex<float> s1_r_{};
+    std::complex<float> s2_r_{};
 };
 
 class VicSineOsc {
@@ -92,14 +103,16 @@ private:
 
 class SingleWarp {
 public:
-    float Tick(std::complex<float> osc, float x) noexcept {
-        auto x1 = x * osc;
-        auto x2 = svf_.TickLowpass(x1);
-        x2 = svf2_.TickLowpass(x2);
-        x2 = svf3_.TickLowpass(x2);
-        x2 = svf4_.TickLowpass(x2);
-        auto x3 = x2 * osc;
-        return x3.real();
+    std::array<float, 2> Tick(std::complex<float> osc, float left, float right) noexcept {
+        auto x1_l = left * osc;
+        auto x1_r = right * osc;
+        auto x2 = svf_.TickLowpass(x1_l, x1_r);
+        x2 = svf2_.TickLowpass(x2[0], x2[1]);
+        x2 = svf3_.TickLowpass(x2[0], x2[1]);
+        x2 = svf4_.TickLowpass(x2[0], x2[1]);
+        auto x3_l = x2[0] * osc;
+        auto x3_r = x2[1] * osc;
+        return {x3_l.real(), x3_r.real()};
     }
 
     void SetFreq(float fcenter) noexcept {
@@ -121,6 +134,8 @@ private:
 
 class WarpCore {
 public:
+    static constexpr int kMaxBands = 256;
+
     void Init(float fs) {
         fs_ = fs;
     }
@@ -139,16 +154,21 @@ public:
             osc_mul = std::conj(osc_mul);
             std::complex<float> osc = osc_mul;
 
-            auto x = left[i];
-            float y = 0;
+            float xleft = left[i];
+            float xright = right[i];
+            float yleft = 0;
+            float yright = 0;
             for (int j = 0; j < num_warps_; j++) {
-                y += warps_[j].Tick(osc, x);
+                auto[by_l, by_r] = warps_[j].Tick(osc, xleft, xright);
+                yleft += by_l;
+                yright += by_r;
                 osc *= osc_mul;
             }
             
-            left[i] = y;
+            left[i] = yleft;
+            right[i] = yright;
         }
-        std::copy_n(left, num_samples, right);
+        osc_.KeepAmp();
     }
 
     struct Param {
@@ -178,7 +198,7 @@ public:
     }
 private:
     float fs_{};
-    SingleWarp warps_[512];
+    SingleWarp warps_[kMaxBands];
 
     int num_warps_{};
     VicSineOsc osc_{};
