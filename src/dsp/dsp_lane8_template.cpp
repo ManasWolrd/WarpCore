@@ -78,26 +78,38 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         };
 
         // -------------------- process first band --------------------
-        float x = left[i];
+        float x_left = left[i];
+        float x_right = right[i];
 
-        std::complex<float> cpx_x = x * pre_osc_f32;
+        std::complex<float> cpx_x_left = x_left * pre_osc_f32;
+        std::complex<float> cpx_x_right = x_right * pre_osc_f32;
         #pragma unroll
         for (int k = 0; k < kPoles; ++k) {
             const float gk = state.svf256.g[k];
             const float dk = state.svf256.d[k];
-            auto& s1jk = state.band0_s1[k];
-            auto& s2jk = state.band0_s2[k];
+            auto& s1_l = state.band0_s1[2 * k];
+            auto& s1_r = state.band0_s1[2 * k + 1];
+            auto& s2_l = state.band0_s2[2 * k];
+            auto& s2_r = state.band0_s2[2 * k + 1];
 
-            auto bp = dk * (gk * (cpx_x - s2jk) + s1jk);
-            auto v1 = bp - s1jk;
-            auto v2 = gk * bp;
-            auto lp = v2 + s2jk;
+            auto bp_l = dk * (gk * (cpx_x_left - s2_l) + s1_l);
+            auto bp_r = dk * (gk * (cpx_x_right - s2_r) + s1_r);
+            auto v1_l = bp_l - s1_l;
+            auto v1_r = bp_r - s1_r;
+            auto v2_l = gk * bp_l;
+            auto v2_r = gk * bp_r;
+            auto lp_l = v2_l + s2_l;
+            auto lp_r = v2_r + s2_r;
             
-            s1jk = bp + v1;
-            s2jk = lp + v2;
-            cpx_x = lp;
+            s1_l = bp_l + v1_l;
+            s1_r = bp_r + v1_r;
+            s2_l = lp_l + v2_l;
+            s2_r = lp_r + v2_r;
+            cpx_x_left = lp_l;
+            cpx_x_right = lp_r;
         }
-        float y = (cpx_x * std::conj(post_osc_f32)).real() * band0_dry_mix;
+        float y_l = (cpx_x_left * std::conj(post_osc_f32)).real() * band0_dry_mix;
+        float y_r = (cpx_x_right * std::conj(post_osc_f32)).real() * band0_dry_mix;
 
         // -------------------- process bands --------------------
         auto* svf_state = state.svf256.state.data();
@@ -106,7 +118,8 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         for (int j = 0; j < simd_loop_count - 1; ++j) {
             // std::complex<float> tmp = x * pre_osc_n_val;
             // pre_osc_n_val *= pre_osc;
-            auto tmp = simd::BroadcastF256(x) * pre_osc_n_val;
+            auto tmp_l = simd::BroadcastF256(x_left) * pre_osc_n_val;
+            auto tmp_r = simd::BroadcastF256(x_right) * pre_osc_n_val;
             pre_osc_n_val *= pre_osc;
 
             #pragma unroll
@@ -119,8 +132,8 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
                 auto s2_re = svf_state->s2_re;
                 auto s2_im = svf_state->s2_im;
 
-                auto bp_re = dk * (gk * (tmp.re - s2_re) + s1_re);
-                auto bp_im = dk * (gk * (tmp.im - s2_im) + s1_im);
+                auto bp_re = dk * (gk * (tmp_l.re - s2_re) + s1_re);
+                auto bp_im = dk * (gk * (tmp_l.im - s2_im) + s1_im);
                 auto v1_re = bp_re - s1_re;
                 auto v1_im = bp_im - s1_im;
                 auto v2_re = gk * bp_re;
@@ -135,14 +148,46 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
 
                 ++svf_state;
                 
-                tmp.re = lp_re;
-                tmp.im = lp_im;
+                tmp_l.re = lp_re;
+                tmp_l.im = lp_im;
+            }
+
+            #pragma unroll
+            for (int k = 0; k < kPoles; ++k) {
+                const float gk = state.svf256.g[k];
+                const float dk = state.svf256.d[k];
+
+                auto s1_re = svf_state->s1_re;
+                auto s1_im = svf_state->s1_im;
+                auto s2_re = svf_state->s2_re;
+                auto s2_im = svf_state->s2_im;
+
+                auto bp_re = dk * (gk * (tmp_r.re - s2_re) + s1_re);
+                auto bp_im = dk * (gk * (tmp_r.im - s2_im) + s1_im);
+                auto v1_re = bp_re - s1_re;
+                auto v1_im = bp_im - s1_im;
+                auto v2_re = gk * bp_re;
+                auto v2_im = gk * bp_im;
+                auto lp_re = v2_re + s2_re;
+                auto lp_im = v2_im + s2_im;
+
+                svf_state->s1_re = bp_re + v1_re;
+                svf_state->s1_im = bp_im + v1_im;
+                svf_state->s2_re = lp_re + v2_re;
+                svf_state->s2_im = lp_im + v2_im;
+
+                ++svf_state;
+                
+                tmp_r.re = lp_re;
+                tmp_r.im = lp_im;
             }
 
             // y += (tmp * post_osc_n_val).real();
             // post_osc_n_val *= post_osc;
-            auto band_out = tmp * post_osc_n_val;
-            y += simd::ReduceAdd(band_out.re * band_gain);
+            auto band_out_l = tmp_l * post_osc_n_val;
+            auto band_out_r = tmp_r * post_osc_n_val;
+            y_l += simd::ReduceAdd(band_out_l.re * band_gain);
+            y_r += simd::ReduceAdd(band_out_r.re * band_gain);
             post_osc_n_val *= post_osc;
 
             band_gain = simd::BroadcastF256(1.0f);
@@ -151,7 +196,8 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         // -------------------- here we have: 1/2/3/4 --------------------
         // std::complex<float> tmp = x * pre_osc_n_val;
         // pre_osc_n_val *= pre_osc;
-        auto tmp = simd::BroadcastF256(x) * pre_osc_n_val;
+        auto tmp_l = simd::BroadcastF256(x_left) * pre_osc_n_val;
+        auto tmp_r = simd::BroadcastF256(x_right) * pre_osc_n_val;
 
         #pragma unroll
         for (int k = 0; k < kPoles; ++k) {
@@ -163,8 +209,8 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
             auto s2_re = svf_state->s2_re;
             auto s2_im = svf_state->s2_im;
 
-            auto bp_re = dk * (gk * (tmp.re - s2_re) + s1_re);
-            auto bp_im = dk * (gk * (tmp.im - s2_im) + s1_im);
+            auto bp_re = dk * (gk * (tmp_l.re - s2_re) + s1_re);
+            auto bp_im = dk * (gk * (tmp_l.im - s2_im) + s1_im);
             auto v1_re = bp_re - s1_re;
             auto v1_im = bp_im - s1_im;
             auto v2_re = gk * bp_re;
@@ -179,17 +225,49 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
 
             ++svf_state;
             
-            tmp.re = lp_re;
-            tmp.im = lp_im;
+            tmp_l.re = lp_re;
+            tmp_l.im = lp_im;
+        }
+
+        #pragma unroll
+        for (int k = 0; k < kPoles; ++k) {
+            const float gk = state.svf256.g[k];
+            const float dk = state.svf256.d[k];
+
+            auto s1_re = svf_state->s1_re;
+            auto s1_im = svf_state->s1_im;
+            auto s2_re = svf_state->s2_re;
+            auto s2_im = svf_state->s2_im;
+
+            auto bp_re = dk * (gk * (tmp_r.re - s2_re) + s1_re);
+            auto bp_im = dk * (gk * (tmp_r.im - s2_im) + s1_im);
+            auto v1_re = bp_re - s1_re;
+            auto v1_im = bp_im - s1_im;
+            auto v2_re = gk * bp_re;
+            auto v2_im = gk * bp_im;
+            auto lp_re = v2_re + s2_re;
+            auto lp_im = v2_im + s2_im;
+
+            svf_state->s1_re = bp_re + v1_re;
+            svf_state->s1_im = bp_im + v1_im;
+            svf_state->s2_re = lp_re + v2_re;
+            svf_state->s2_im = lp_im + v2_im;
+
+            ++svf_state;
+            
+            tmp_r.re = lp_re;
+            tmp_r.im = lp_im;
         }
 
         // y += (tmp * post_osc_n_val).real();
         // post_osc_n_val *= post_osc;
-        auto band_out = tmp * post_osc_n_val;
-        y += simd::ReduceAdd(band_out.re * tail_gain);
+        auto band_out_l = tmp_l * post_osc_n_val;
+        auto band_out_r = tmp_r * post_osc_n_val;
+        y_l += simd::ReduceAdd(band_out_l.re * tail_gain);
+        y_r += simd::ReduceAdd(band_out_r.re * tail_gain);
 
-        left[i] = y;
-        right[i] = y;
+        left[i] = y_l;
+        right[i] = y_r;
     }
 }
 
@@ -205,6 +283,9 @@ static void Reset(warpcore::ProcessorState& state) noexcept {
     state.svf256.Reset();
     state.pre_osc_phase = 0.0f;
     state.post_osc_phase = 0.0f;
+
+    std::fill_n(state.band0_s1, global::kMaxPoles * 2, std::complex<float>{});
+    std::fill_n(state.band0_s2, global::kMaxPoles * 2, std::complex<float>{});
 }
 
 static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) noexcept {

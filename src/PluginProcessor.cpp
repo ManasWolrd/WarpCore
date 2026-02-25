@@ -30,7 +30,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"f_high", 1},
             "f_high",
-            juce::NormalisableRange<float>{40.0f, 40010.0f, 0.4f}, 20000.0f,
+            juce::NormalisableRange<float>{40.0f, 40010.0f, 0.4f}, 40010.0f,
             juce::AudioParameterFloatAttributes{}.withStringFromValueFunction([](auto x, auto maxlen) -> juce::String {
                 if (x >= 40000.0f) {
                     return "SampleRate";
@@ -74,7 +74,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"base_mix", 1},
             "base_mix",
-            juce::NormalisableRange<float>{0.0f, 1.0f, 0.01f}, 0.0f
+            juce::NormalisableRange<float>{0.0f, 1.0f, 0.01f}, 1.0f
         );
         param_listener_.Add(p, [this](float v) {
             param_.base_mix = v;

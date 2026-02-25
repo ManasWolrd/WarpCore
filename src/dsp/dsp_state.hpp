@@ -16,7 +16,7 @@ struct SvfLaneN {
        SimdT s2_re;
        SimdT s2_im;
     };
-    simd::Array256<SvfState, global::kMaxBands * global::kMaxPoles / simd::LaneSize<SimdT>> state;
+    simd::Array256<SvfState, 2 * global::kMaxBands * global::kMaxPoles / simd::LaneSize<SimdT>> state;
 
     void Reset() noexcept {
         state.fill(SvfState{});
@@ -61,8 +61,8 @@ struct ProcessorState {
         SvfLaneN<simd::Float256> svf256;
     };
 
-    std::complex<float> band0_s1[global::kMaxPoles];
-    std::complex<float> band0_s2[global::kMaxPoles];
+    std::complex<float> band0_s1[global::kMaxPoles * 2];
+    std::complex<float> band0_s2[global::kMaxPoles * 2];
 };
 
 struct Param {
