@@ -3,7 +3,7 @@
 #include "pluginshared/preset_manager.hpp"
 #include "pluginshared/wrap_parameters.hpp"
 
-#include "dsp/warpcore.hpp"
+#include "dsp/dsp_state.hpp"
 
 class EmptyAudioProcessor final : public juce::AudioProcessor {
 public:
@@ -48,8 +48,11 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState> value_tree_;
     std::unique_ptr<pluginshared::PresetManager> preset_manager_;
 
-    warpcore::WarpCore dsp_;
-    warpcore::WarpCore::Param param_;
+    warpcore::ProcessorState dsp_state_;
+    warpcore::ProcessorDsp dsp_processor_;
+    warpcore::Param use_param_;
+    warpcore::Param param_;
+    std::atomic<bool> param_changed_ = false;
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EmptyAudioProcessor)

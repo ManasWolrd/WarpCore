@@ -16,17 +16,29 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     f_high_.BindParam(apvt, "f_high");
     addAndMakeVisible(f_high_);
 
-    setSize(400, 300);
+    poles_.BindParam(apvt, "poles");
+    addAndMakeVisible(poles_);
+
+    base_mix_.BindParam(apvt, "base_mix");
+    addAndMakeVisible(base_mix_);
+
+    pitch_.BindParam(apvt, "pitch");
+    addAndMakeVisible(pitch_);
+
+    setSize(480, 130);
 }
 
 void PluginUi::resized() {
     auto b = getLocalBounds();
     preset_.setBounds(b.removeFromTop(30));
 
-    auto line = b.removeFromTop(65);
-    warp_.setBounds(line.removeFromLeft(50));
-    f_low_.setBounds(line.removeFromLeft(50));
-    f_high_.setBounds(line.removeFromLeft(50));
+    auto line = b.removeFromTop(100);
+    warp_.setBounds(line.removeFromLeft(80));
+    f_low_.setBounds(line.removeFromLeft(80));
+    f_high_.setBounds(line.removeFromLeft(80));
+    poles_.setBounds(line.removeFromLeft(80));
+    pitch_.setBounds(line.removeFromLeft(80));
+    base_mix_.setBounds(line.removeFromLeft(80));
 }
 
 void PluginUi::paint(juce::Graphics& g) {

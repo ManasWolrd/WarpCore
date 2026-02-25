@@ -1,0 +1,277 @@
+#include "dsp_state.hpp"
+
+#include <cassert>
+#include <complex>
+
+namespace warpcore {
+template <int kPoles>
+static void ProcessInternal(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
+    constexpr simd::Array128<simd::Float256, 8> kBandGainLut{
+        simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+        simd::Float256{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+        simd::Float256{1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+        simd::Float256{1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+        simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+        simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f},
+        simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+        simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f},
+    };
+    simd::Float256 tail_gain = kBandGainLut[state.num_warps & 7];
+
+    float band0_dry_mix = state.base_mix;
+    float band0_wet_mix = 1.0f - band0_dry_mix;
+    int simd_loop_count = (state.num_warps + 7) / 8;
+
+    if (state.num_warps <= 8) {
+        tail_gain[0] = band0_wet_mix;
+    }
+
+    for (int i = 0; i < num_samples; i++) {
+        // -------------------- tick complex sine generators --------------------
+        state.pre_osc_phase += state.pre_osc_phase_inc;
+        state.pre_osc_phase -= std::floor(state.pre_osc_phase);
+
+        state.post_osc_phase += state.post_osc_phase_inc;
+        state.post_osc_phase -= std::floor(state.post_osc_phase);
+
+        constexpr float twopi = 2.0f * std::numbers::pi_v<float>;
+        const std::complex<float> pre_osc_f32 = {std::cos(state.pre_osc_phase * twopi), std::sin(state.pre_osc_phase * twopi)};
+        const std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi), std::sin(state.post_osc_phase * twopi)};
+
+        const auto pre_osc_f32_0 = pre_osc_f32;
+        const auto pre_osc_f32_1 = pre_osc_f32 * pre_osc_f32;
+        const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
+        const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
+        const auto pre_osc_f32_4 = pre_osc_f32_0 * pre_osc_f32_3;
+        const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_4;
+        const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_5;
+        const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_6;
+
+        const auto post_osc_f32_0 = post_osc_f32;
+        const auto post_osc_f32_1 = post_osc_f32 * post_osc_f32;
+        const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32 * post_osc_f32;
+        const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32 * post_osc_f32;
+        const auto post_osc_f32_4 = post_osc_f32_0 * post_osc_f32_3;
+        const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_4;
+        const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_5;
+        const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_6;
+
+        const simd::Complex256 pre_osc{
+            .re = simd::BroadcastF256(pre_osc_f32_7.real()),
+            .im = simd::BroadcastF256(pre_osc_f32_7.imag()),
+        };
+        const simd::Complex256 post_osc{
+            .re = simd::BroadcastF256(post_osc_f32_7.real()),
+            .im = simd::BroadcastF256(post_osc_f32_7.imag()),
+        };
+        simd::Complex256 pre_osc_n_val{
+            .re = {pre_osc_f32_0.real(), pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(),
+                   pre_osc_f32_4.real(), pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real()},
+            .im = {pre_osc_f32_0.imag(), pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(),
+                   pre_osc_f32_4.imag(), pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag()},
+        };
+        simd::Complex256 post_osc_n_val{
+            .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(),
+                   post_osc_f32_4.real(), post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real()},
+            .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
+                   post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
+        };
+
+        // -------------------- process first band --------------------
+        float x = left[i];
+
+        std::complex<float> cpx_x = x * pre_osc_f32;
+        #pragma unroll
+        for (int k = 0; k < kPoles; ++k) {
+            const float gk = state.svf256.g[k];
+            const float dk = state.svf256.d[k];
+            auto& s1jk = state.band0_s1[k];
+            auto& s2jk = state.band0_s2[k];
+
+            auto bp = dk * (gk * (cpx_x - s2jk) + s1jk);
+            auto v1 = bp - s1jk;
+            auto v2 = gk * bp;
+            auto lp = v2 + s2jk;
+            
+            s1jk = bp + v1;
+            s2jk = lp + v2;
+            cpx_x = lp;
+        }
+        float y = (cpx_x * std::conj(post_osc_f32)).real() * band0_dry_mix;
+
+        // -------------------- process bands --------------------
+        auto* svf_state = state.svf256.state.data();
+        simd::Float256 band_gain{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+
+        for (int j = 0; j < simd_loop_count - 1; ++j) {
+            // std::complex<float> tmp = x * pre_osc_n_val;
+            // pre_osc_n_val *= pre_osc;
+            auto tmp = simd::BroadcastF256(x) * pre_osc_n_val;
+            pre_osc_n_val *= pre_osc;
+
+            #pragma unroll
+            for (int k = 0; k < kPoles; ++k) {
+                const float gk = state.svf256.g[k];
+                const float dk = state.svf256.d[k];
+
+                auto s1_re = svf_state->s1_re;
+                auto s1_im = svf_state->s1_im;
+                auto s2_re = svf_state->s2_re;
+                auto s2_im = svf_state->s2_im;
+
+                auto bp_re = dk * (gk * (tmp.re - s2_re) + s1_re);
+                auto bp_im = dk * (gk * (tmp.im - s2_im) + s1_im);
+                auto v1_re = bp_re - s1_re;
+                auto v1_im = bp_im - s1_im;
+                auto v2_re = gk * bp_re;
+                auto v2_im = gk * bp_im;
+                auto lp_re = v2_re + s2_re;
+                auto lp_im = v2_im + s2_im;
+
+                svf_state->s1_re = bp_re + v1_re;
+                svf_state->s1_im = bp_im + v1_im;
+                svf_state->s2_re = lp_re + v2_re;
+                svf_state->s2_im = lp_im + v2_im;
+
+                ++svf_state;
+                
+                tmp.re = lp_re;
+                tmp.im = lp_im;
+            }
+
+            // y += (tmp * post_osc_n_val).real();
+            // post_osc_n_val *= post_osc;
+            auto band_out = tmp * post_osc_n_val;
+            y += simd::ReduceAdd(band_out.re * band_gain);
+            post_osc_n_val *= post_osc;
+
+            band_gain = simd::BroadcastF256(1.0f);
+        }
+
+        // -------------------- here we have: 1/2/3/4 --------------------
+        // std::complex<float> tmp = x * pre_osc_n_val;
+        // pre_osc_n_val *= pre_osc;
+        auto tmp = simd::BroadcastF256(x) * pre_osc_n_val;
+
+        #pragma unroll
+        for (int k = 0; k < kPoles; ++k) {
+            const float gk = state.svf256.g[k];
+            const float dk = state.svf256.d[k];
+
+            auto s1_re = svf_state->s1_re;
+            auto s1_im = svf_state->s1_im;
+            auto s2_re = svf_state->s2_re;
+            auto s2_im = svf_state->s2_im;
+
+            auto bp_re = dk * (gk * (tmp.re - s2_re) + s1_re);
+            auto bp_im = dk * (gk * (tmp.im - s2_im) + s1_im);
+            auto v1_re = bp_re - s1_re;
+            auto v1_im = bp_im - s1_im;
+            auto v2_re = gk * bp_re;
+            auto v2_im = gk * bp_im;
+            auto lp_re = v2_re + s2_re;
+            auto lp_im = v2_im + s2_im;
+
+            svf_state->s1_re = bp_re + v1_re;
+            svf_state->s1_im = bp_im + v1_im;
+            svf_state->s2_re = lp_re + v2_re;
+            svf_state->s2_im = lp_im + v2_im;
+
+            ++svf_state;
+            
+            tmp.re = lp_re;
+            tmp.im = lp_im;
+        }
+
+        // y += (tmp * post_osc_n_val).real();
+        // post_osc_n_val *= post_osc;
+        auto band_out = tmp * post_osc_n_val;
+        y += simd::ReduceAdd(band_out.re * tail_gain);
+
+        left[i] = y;
+        right[i] = y;
+    }
+}
+
+// ----------------------------------------
+// dsp processor
+// ----------------------------------------
+
+static void Init(warpcore::ProcessorState& state, float fs) noexcept {
+    state.fs = fs;
+}
+
+static void Reset(warpcore::ProcessorState& state) noexcept {
+    state.svf256.Reset();
+    state.pre_osc_phase = 0.0f;
+    state.post_osc_phase = 0.0f;
+}
+
+static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) noexcept {
+    state.num_warps = p.bands;
+    state.base_mix = p.base_mix;
+
+    float fhigh = p.f_high;
+    if (fhigh > 40000.0f) {
+        fhigh = state.fs;
+    }
+    fhigh = std::min(fhigh, state.fs);
+
+    float finc = fhigh / static_cast<float>(p.bands);
+    float fbase = finc / 2;
+    state.osc_base_freq = fbase;
+    state.pre_osc_phase_inc = fbase / state.fs;
+    state.post_osc_phase_inc = state.pre_osc_phase_inc * p.post_osc_freq_mul;
+
+    if (p.post_osc_freq_mul == 1.0f) {
+        state.post_osc_phase = state.pre_osc_phase;
+        state.post_osc_phase_inc = state.pre_osc_phase_inc;
+    }
+
+    // butterworth lowpass
+    float wbase = fbase * 2 * std::numbers::pi_v<float> / state.fs;
+    float filter_w = wbase * p.filter_scale;
+    filter_w = std::min(filter_w, std::numbers::pi_v<float> / 2 - 1e-5f);
+
+    if (state.poles != p.filter_order) {
+        state.svf256.Reset();
+    }
+    state.poles = p.filter_order;
+    state.svf256.SetFreq(filter_w, p.filter_order);
+}
+
+static void Process(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
+    switch (state.poles) {
+    case 1:
+        ProcessInternal<1>(state, left, right, num_samples);
+        break;
+    case 2:
+        ProcessInternal<2>(state, left, right, num_samples);
+        break;
+    case 3:
+        ProcessInternal<3>(state, left, right, num_samples);
+        break;
+    case 4:
+        ProcessInternal<4>(state, left, right, num_samples);
+        break;
+    default:
+        assert(false);
+        break;
+}
+}
+
+// ----------------------------------------
+// export
+// ----------------------------------------
+
+#ifndef DSP_EXPORT_NAME
+#error "不应该编译这个文件,在其他cpp包含这个cpp并定义DSP_EXPORT_NAME=`dsp_dispatch.cpp里的变量`"
+#endif
+
+ProcessorDsp DSP_EXPORT_NAME{
+    Init,
+    Reset,
+    Update,
+    Process
+};
+}

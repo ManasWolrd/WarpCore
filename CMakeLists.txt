@@ -65,12 +65,22 @@ juce_add_plugin(${PROJECT_NAME}
     LV2URI ${PLUGIN_REPO_URL}
 )
 
-# 添加源文件
-file(GLOB_RECURSE src
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+target_sources(${PROJECT_NAME}
+PRIVATE
+    # src/dsp/dsp_lane4_template.cpp
+    src/dsp/dsp_sse2.cpp
+    src/dsp/dsp_sse4.cpp
+    src/dsp/dsp_avx.cpp
+    src/dsp/dsp_avx2.cpp
+    src/dsp/dsp_dispatch.cpp
+    src/ui/plugin_ui.cpp
+    src/PluginEditor.cpp
+    src/PluginProcessor.cpp
 )
-target_sources(${PROJECT_NAME} PRIVATE ${src})
+set_source_files_properties("src/dsp/dsp_sse2.cpp" PROPERTIES COMPILE_FLAGS "-msse2")
+set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-msse4.1")
+set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-mavx")
+set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-mavx2")
 
 # 头文件目录
 target_include_directories(${PROJECT_NAME}
@@ -163,3 +173,17 @@ endif()
 if(DEFINED DBUILD_IN_CI)
     target_compile_definitions(${PROJECT_NAME} PRIVATE DBUILD_IN_CI=1)
 endif()
+
+# ----------------------------------------
+# cpp_simd_detector
+# ----------------------------------------
+set(CPP_SIMD_DETECTOR_BUILD_EXAMPLES OFF)
+add_subdirectory(libs/cpp_simd_detector)
+target_link_libraries(${PROJECT_NAME} PUBLIC cpp_simd_detector)
+
+# ----------------------------------------
+# simde
+# ----------------------------------------
+add_library(simde INTERFACE)
+target_include_directories(simde INTERFACE libs/simde)
+target_link_libraries(${PROJECT_NAME} PUBLIC simde)
