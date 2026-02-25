@@ -1,18 +1,18 @@
 # WarpCore
-建议先了解一下 prosoniq piwarp 或者 zynaptiq wormhole 插件的效果样子  
-WarpCore是一个在**没有反编译**的情况下[构思](doc/warp.md)出的`多段频谱反转`插件，类似于piwarp/wormhole的`时域局部频谱反转`效果  
+尝试重现 prosoniq piwarp 或者 zynaptiq wormhole 插件的效果  
+WarpCore是一个`多段频谱反转`插件，类似于piwarp/wormhole的`时域局部频谱反转`效果  
 
 > [!WARNING]
 > 此插件正在开发中
 
 ## featrue
-- [ ] 可配置极点数滤波器
+- [x] 可配置极点数滤波器
     包括: 滤波器极点数量 滤波器截止频率缩放
 - [ ] 内置带通分频器
     包括: 低分频和高分频(最后再做)
 - [ ] 可调整带宽
     包括: 必须是递增的函数的带宽分配
-- [ ] 共振峰移动
+- [x] 共振峰移动
     应该是加在输出的振荡器上面
 
 # 克隆到本地
