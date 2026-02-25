@@ -13,9 +13,11 @@ public:
         float f_high;
         float filter_scale;
         int filter_order;
+        bool warp_first;
+        float post_osc_freq_mul;
     };
 
-    ~IWarpCore() = default;
+    virtual ~IWarpCore() = default;
 
     virtual void Init(float fs) = 0;
     virtual void Reset() noexcept = 0;

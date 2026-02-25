@@ -67,11 +67,20 @@ juce_add_plugin(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME}
 PRIVATE
-    src/dsp/dispatch.cpp
+    # src/dsp/dsp_lane4_template.cpp
+    src/dsp/dsp_sse2.cpp
+    src/dsp/dsp_sse4.cpp
+    src/dsp/dsp_avx.cpp
+    src/dsp/dsp_avx2.cpp
+    src/dsp/dsp_dispatch.cpp
     src/ui/plugin_ui.cpp
     src/PluginEditor.cpp
     src/PluginProcessor.cpp
 )
+set_source_files_properties("src/dsp/dsp_sse2.cpp" PROPERTIES COMPILE_FLAGS "-msse2")
+set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-msse4.1")
+set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-mavx")
+set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-mavx2")
 
 # 头文件目录
 target_include_directories(${PROJECT_NAME}
@@ -171,3 +180,10 @@ endif()
 set(CPP_SIMD_DETECTOR_BUILD_EXAMPLES OFF)
 add_subdirectory(libs/cpp_simd_detector)
 target_link_libraries(${PROJECT_NAME} PUBLIC cpp_simd_detector)
+
+# ----------------------------------------
+# simde
+# ----------------------------------------
+add_library(simde INTERFACE)
+target_include_directories(simde INTERFACE libs/simde)
+target_link_libraries(${PROJECT_NAME} PUBLIC simde)

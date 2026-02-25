@@ -18,7 +18,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterInt>(
             juce::ParameterID{"warp", 1},
             "warp",
-            1, 512, 64
+            1, global::kMaxBands, 64
         );
         param_listener_.Add(p, [this](int v) {
             param_.bands = v;
@@ -28,21 +28,17 @@ EmptyAudioProcessor::EmptyAudioProcessor()
     }
     {
         auto p = std::make_unique<juce::AudioParameterFloat>(
-            juce::ParameterID{"f_low", 1},
-            "f_low",
-            juce::NormalisableRange<float>{0.0f, 20000.0f, 0.4f}, 0.0f
-        );
-        param_listener_.Add(p, [this](float v) {
-            param_.f_low = v;
-            param_changed_ = true;
-        });
-        layout.add(std::move(p));
-    }
-    {
-        auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"f_high", 1},
             "f_high",
-            juce::NormalisableRange<float>{40.0f, 40000.0f, 0.4f}, 20000.0f
+            juce::NormalisableRange<float>{40.0f, 40010.0f, 0.4f}, 20000.0f,
+            juce::AudioParameterFloatAttributes{}.withStringFromValueFunction([](auto x, auto maxlen) -> juce::String {
+                if (x >= 40000.0f) {
+                    return "SampleRate";
+                }
+                else {
+                    return juce::String(x, maxlen);
+                }
+            })
         );
         param_listener_.Add(p, [this](float v) {
             param_.f_high = v;
@@ -62,6 +58,42 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         });
         layout.add(std::move(p));
     }
+    {
+        auto p = std::make_unique<juce::AudioParameterFloat>(
+            juce::ParameterID{"pitch", 1},
+            "pitch",
+            juce::NormalisableRange<float>{-12.0f, 12.0f, 0.01f}, 0.0f
+        );
+        param_listener_.Add(p, [this](float v) {
+            param_.post_osc_freq_mul = std::exp2(v / 12.0f);
+            param_changed_ = true;
+        });
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterFloat>(
+            juce::ParameterID{"base_mix", 1},
+            "base_mix",
+            juce::NormalisableRange<float>{0.0f, 1.0f, 0.01f}, 0.0f
+        );
+        param_listener_.Add(p, [this](float v) {
+            param_.base_mix = v;
+            param_changed_ = true;
+        });
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterInt>(
+            juce::ParameterID{"poles", 1},
+            "poles",
+            1, global::kMaxPoles, 2
+        );
+        param_listener_.Add(p, [this](int v) {
+            param_.filter_order = v;
+            param_changed_ = true;
+        });
+        layout.add(std::move(p));
+    }
 
     value_tree_ = std::make_unique<juce::AudioProcessorValueTreeState>(*this, nullptr, kParameterValueTreeIdentify,
                                                                        std::move(layout));
@@ -69,7 +101,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         global::kPluginRepoOwnerName, global::kPluginRepoName
     });
 
-    dsp_ = warpcore::CreateDsp();
+    dsp_processor_ = warpcore::GetProcessorDsp();
 }
 
 EmptyAudioProcessor::~EmptyAudioProcessor() {
@@ -136,8 +168,10 @@ void EmptyAudioProcessor::changeProgramName(int index, const juce::String& newNa
 //==============================================================================
 void EmptyAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     float fs = static_cast<float>(sampleRate);
-    dsp_->Init(fs);
-    dsp_->Reset();
+    if (dsp_processor_.IsValid()) {
+        dsp_processor_.init(dsp_state_, fs);
+        dsp_processor_.reset(dsp_state_);
+    }
     param_listener_.MarkAll();
 }
 
@@ -169,19 +203,20 @@ bool EmptyAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) con
 }
 
 void EmptyAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
+    if (!dsp_processor_.IsValid()) return;
+
     juce::ScopedNoDenormals noDenormals;
     param_listener_.HandleDirty();
     if (param_changed_.exchange(false)) {
         use_param_ = param_;
-        use_param_.filter_order = 2;
-        dsp_->Update(use_param_);
+        dsp_processor_.update(dsp_state_, use_param_);
     }
 
     int const num_samples = buffer.getNumSamples();
     float* left_ptr = buffer.getWritePointer(0);
     float* right_ptr = buffer.getWritePointer(1);
 
-    dsp_->Process(left_ptr, right_ptr, num_samples);
+    dsp_processor_.process(dsp_state_,left_ptr, right_ptr, num_samples);
 }
 
 //==============================================================================

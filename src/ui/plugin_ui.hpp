@@ -23,7 +23,10 @@ private:
     }
     pluginshared::PresetPanel preset_;
 
-    ui::Dial warp_{"warp"};
-    ui::Dial f_low_{"scale"};
-    ui::Dial f_high_{"f_high"};
+    ui::Dial warp_{"Warp"};
+    ui::Dial f_low_{"Scale"};
+    ui::Dial f_high_{"Freq High"};
+    ui::Dial poles_{"Poles"};
+    ui::Dial pitch_{"Pitch"};
+    ui::Dial base_mix_{"Base Mix"};
 };
