@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.22.1)
 # ----------------------------------------
 # 插件信息，改了记得改src/global.hpp
 # ----------------------------------------
-set(TEAM_NAME ManasWorld)
-set(PLUGIN_REPO_URL "https://github.com/ManasWorld/WarpCore")
+set(TEAM_NAME ManasWolrd)
+set(PLUGIN_REPO_URL "https://github.com/ManasWolrd/WarpCore")
 set(PLUGIN_NAME WarpCore)
-set(PLUGIN_VERSION 0.0.1)
-set(PLUGIN_BUNDLE_ID "com.manasworld.${PLUGIN_NAME}")
+set(PLUGIN_VERSION 0.0.2)
+set(PLUGIN_BUNDLE_ID "com.ManasWolrd.${PLUGIN_NAME}")
 
 option(BUILD_STANDALONE "Build Standalone plugin format" ON)
 option(BUILD_VST3 "Build VST3 plugin format" ON)
