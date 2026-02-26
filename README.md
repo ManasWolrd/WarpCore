@@ -2,9 +2,6 @@
 尝试重现 prosoniq piwarp 或者 zynaptiq wormhole 插件的效果  
 WarpCore是一个`多段频谱反转`插件，类似于piwarp/wormhole的`时域局部频谱反转`效果  
 
-> [!WARNING]
-> 此插件正在开发中
-
 ## featrue
 - [x] 可配置极点数滤波器
     包括: 滤波器极点数量 滤波器截止频率缩放
@@ -14,6 +11,9 @@ WarpCore是一个`多段频谱反转`插件，类似于piwarp/wormhole的`时域
     包括: 必须是递增的函数的带宽分配
 - [x] 共振峰移动
     应该是加在输出的振荡器上面
+
+## GUI
+![display](doc/gui.png)
 
 # 克隆到本地
 ```bash
