@@ -21,6 +21,7 @@ static_assert(std::is_base_of_v<juce::Component, PluginUi>, "PluginUi must inher
 
 EmptyAudioProcessorEditor::EmptyAudioProcessorEditor(EmptyAudioProcessor& p)
     : AudioProcessorEditor(&p)
+    , tooltip_(this, 1000)
     , ui_(p) {
     auto ui_bound = ui_.getLocalBounds();
     if (ui_bound.isEmpty()) {
@@ -49,9 +50,12 @@ EmptyAudioProcessorEditor::EmptyAudioProcessorEditor(EmptyAudioProcessor& p)
         setSize(static_cast<int>(static_cast<float>(width) * scale_), static_cast<int>(static_cast<float>(height) * scale_));
     };
     addAndMakeVisible(ui_);
+
+    tooltip_.setLookAndFeel(ui::GetLookAndFeel());
 }
 
 EmptyAudioProcessorEditor::~EmptyAudioProcessorEditor() {
+    tooltip_.setLookAndFeel(nullptr);
 }
 
 //==============================================================================

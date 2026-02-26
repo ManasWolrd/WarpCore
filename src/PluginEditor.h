@@ -13,6 +13,7 @@ public:
     void resized() override;
 
 private:
+    juce::TooltipWindow tooltip_;
     PluginUi ui_;
     float scale_{1.0f};
     int ui_width_{};
