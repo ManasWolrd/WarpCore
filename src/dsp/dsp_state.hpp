@@ -45,6 +45,7 @@ struct ProcessorState {
     int num_warps{};
     int poles{};
     float base_mix{};
+    bool pitch_affect{};
 
     // complex sine generator
     float osc_base_freq{};
@@ -71,8 +72,9 @@ struct Param {
     float f_high;
     float filter_scale;
     int filter_order;
-    float post_osc_freq_mul;
+    float pitch_shift;
     float base_mix;
+    bool pitch_affect;
 };
 
 struct ProcessorDsp {

@@ -29,4 +29,7 @@ private:
     ui::Dial poles_{"Poles"};
     ui::Dial pitch_{"Pitch"};
     ui::Dial base_mix_{"Base Mix"};
+
+    juce::Label pitch_affect_label{"", "Formant Mode"};
+    ui::Switch pitch_affect_{"Formant", "Pitch"};
 };

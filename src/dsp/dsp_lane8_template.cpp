@@ -4,7 +4,7 @@
 #include <complex>
 
 namespace warpcore {
-template <int kPoles>
+template <int kPoles, bool kPitchAffect>
 static void ProcessInternal(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     constexpr simd::Array256<simd::Float256, 8> kBandGainLut{
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
@@ -35,8 +35,11 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         state.post_osc_phase -= std::floor(state.post_osc_phase);
 
         constexpr float twopi = 2.0f * std::numbers::pi_v<float>;
-        const std::complex<float> pre_osc_f32 = {std::cos(state.pre_osc_phase * twopi), std::sin(state.pre_osc_phase * twopi)};
-        const std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi), std::sin(state.post_osc_phase * twopi)};
+        std::complex<float> pre_osc_f32 = {std::cos(state.pre_osc_phase * twopi), std::sin(state.pre_osc_phase * twopi)};
+        std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi), std::sin(state.post_osc_phase * twopi)};
+        if constexpr (kPitchAffect) {
+            std::swap(pre_osc_f32, post_osc_f32);
+        }
 
         const auto pre_osc_f32_0 = pre_osc_f32;
         const auto pre_osc_f32_1 = pre_osc_f32 * pre_osc_f32;
@@ -271,6 +274,39 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
     }
 }
 
+template <bool kPitchAffect>
+static void ProcessPoles(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
+    switch (state.poles) {
+        case 1:
+            ProcessInternal<1, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case 2:
+            ProcessInternal<2, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case 3:
+            ProcessInternal<3, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case 4:
+            ProcessInternal<4, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case 5:
+            ProcessInternal<5, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case 6:
+            ProcessInternal<6, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case 7:
+            ProcessInternal<7, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case 8:
+            ProcessInternal<8, kPitchAffect>(state, left, right, num_samples);
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
 // ----------------------------------------
 // dsp processor
 // ----------------------------------------
@@ -291,6 +327,7 @@ static void Reset(warpcore::ProcessorState& state) noexcept {
 static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) noexcept {
     state.num_warps = p.bands;
     state.base_mix = p.base_mix;
+    state.pitch_affect = p.pitch_affect;
 
     float fhigh = p.f_high;
     if (fhigh > 40000.0f) {
@@ -300,14 +337,11 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 
     float finc = fhigh / static_cast<float>(p.bands);
     float fbase = finc / 2;
+    float fshit = p.pitch_affect ? -p.pitch_shift : p.pitch_shift;
+    fshit = std::exp2(fshit / 12.0f);
     state.osc_base_freq = fbase;
     state.pre_osc_phase_inc = fbase / state.fs;
-    state.post_osc_phase_inc = state.pre_osc_phase_inc * p.post_osc_freq_mul;
-
-    if (p.post_osc_freq_mul == 1.0f) {
-        state.post_osc_phase = state.pre_osc_phase;
-        state.post_osc_phase_inc = state.pre_osc_phase_inc;
-    }
+    state.post_osc_phase_inc = state.pre_osc_phase_inc * fshit;
 
     // butterworth lowpass
     float wbase = fbase * 2 * std::numbers::pi_v<float> / state.fs;
@@ -322,23 +356,12 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 }
 
 static void Process(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
-    switch (state.poles) {
-    case 1:
-        ProcessInternal<1>(state, left, right, num_samples);
-        break;
-    case 2:
-        ProcessInternal<2>(state, left, right, num_samples);
-        break;
-    case 3:
-        ProcessInternal<3>(state, left, right, num_samples);
-        break;
-    case 4:
-        ProcessInternal<4>(state, left, right, num_samples);
-        break;
-    default:
-        assert(false);
-        break;
-}
+    if (state.pitch_affect) {
+        ProcessPoles<true>(state, left, right, num_samples);
+    }
+    else {
+        ProcessPoles<false>(state, left, right, num_samples);
+    }
 }
 
 // ----------------------------------------

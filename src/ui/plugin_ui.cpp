@@ -31,20 +31,30 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     pitch_.slider.setTooltip("Set the warped signal's pitch.\nThis is used to simulate PiWarp's pitch parameter");
     addAndMakeVisible(pitch_);
 
-    setSize(480, 130);
+    pitch_affect_.BindParam(apvt, "pitch_affect");
+    pitch_affect_.setTooltip("How the formant is changed");
+    addAndMakeVisible(pitch_affect_);
+    ui::SetLableBlack(pitch_affect_label);
+    addAndMakeVisible(pitch_affect_label);
+
+    setSize(480, 160);
 }
 
 void PluginUi::resized() {
     auto b = getLocalBounds();
     preset_.setBounds(b.removeFromTop(30));
 
-    auto line = b.removeFromTop(100);
+    auto line = b.removeFromBottom(100);
     warp_.setBounds(line.removeFromLeft(80));
-    f_low_.setBounds(line.removeFromLeft(80));
     f_high_.setBounds(line.removeFromLeft(80));
+    f_low_.setBounds(line.removeFromLeft(80));
     poles_.setBounds(line.removeFromLeft(80));
     pitch_.setBounds(line.removeFromLeft(80));
     base_mix_.setBounds(line.removeFromLeft(80));
+
+    b.removeFromLeft(pitch_.getBounds().getX());
+    pitch_affect_.setBounds(b.withWidth(pitch_.getWidth()).reduced(2));
+    pitch_affect_label.setBounds(pitch_affect_.getBounds().translated(-100, 0).withWidth(100));
 }
 
 void PluginUi::paint(juce::Graphics& g) {

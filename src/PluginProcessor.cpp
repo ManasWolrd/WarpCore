@@ -65,7 +65,19 @@ EmptyAudioProcessor::EmptyAudioProcessor()
             juce::NormalisableRange<float>{-12.0f, 12.0f, 0.01f}, 0.0f
         );
         param_listener_.Add(p, [this](float v) {
-            param_.post_osc_freq_mul = std::exp2(v / 12.0f);
+            param_.pitch_shift = v;
+            param_changed_ = true;
+        });
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterBool>(
+            juce::ParameterID{"pitch_affect", 1},
+            "pitch_affect",
+            false
+        );
+        param_listener_.Add(p, [this](bool v) {
+            param_.pitch_affect = v;
             param_changed_ = true;
         });
         layout.add(std::move(p));
