@@ -1,0 +1,26 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "clang",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Debug",
+            "configurePreset": "clang",
+            "configuration": "Debug"
+        },
+        {
+            "name": "RelWithDebInfo",
+            "configurePreset": "clang",
+            "configuration": "RelWithDebInfo"
+        }
+    ]
+}

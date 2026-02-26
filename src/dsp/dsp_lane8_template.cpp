@@ -6,7 +6,7 @@
 namespace warpcore {
 template <int kPoles>
 static void ProcessInternal(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
-    constexpr simd::Array128<simd::Float256, 8> kBandGainLut{
+    constexpr simd::Array256<simd::Float256, 8> kBandGainLut{
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
         simd::Float256{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
         simd::Float256{1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
@@ -43,18 +43,18 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
         const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
         const auto pre_osc_f32_4 = pre_osc_f32_0 * pre_osc_f32_3;
-        const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_4;
-        const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_5;
-        const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_6;
+        const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_3;
+        const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_3;
+        const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_3;
 
         const auto post_osc_f32_0 = post_osc_f32;
         const auto post_osc_f32_1 = post_osc_f32 * post_osc_f32;
         const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32 * post_osc_f32;
         const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32 * post_osc_f32;
         const auto post_osc_f32_4 = post_osc_f32_0 * post_osc_f32_3;
-        const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_4;
-        const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_5;
-        const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_6;
+        const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_3;
+        const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_3;
+        const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_3;
 
         const simd::Complex256 pre_osc{
             .re = simd::BroadcastF256(pre_osc_f32_7.real()),
