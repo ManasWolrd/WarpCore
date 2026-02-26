@@ -329,7 +329,7 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
     // butterworth lowpass
     float wbase = fbase * 2 * std::numbers::pi_v<float> / state.fs;
     float filter_w = wbase * p.filter_scale;
-    filter_w = std::min(filter_w, std::numbers::pi_v<float> / 2 - 1e-5f);
+    filter_w = std::min(filter_w, std::numbers::pi_v<float> - 1e-5f);
 
     if (state.poles != p.filter_order) {
         state.svf128.Reset();
