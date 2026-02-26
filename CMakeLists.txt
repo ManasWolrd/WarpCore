@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.22.1)
 set(TEAM_NAME ManasWolrd)
 set(PLUGIN_REPO_URL "https://github.com/ManasWolrd/WarpCore")
 set(PLUGIN_NAME WarpCore)
-set(PLUGIN_VERSION 0.0.2)
+set(PLUGIN_VERSION 0.0.3)
 set(PLUGIN_BUNDLE_ID "com.ManasWolrd.${PLUGIN_NAME}")
 
 option(BUILD_STANDALONE "Build Standalone plugin format" ON)
