@@ -6,14 +6,14 @@ namespace warpcore {
 ProcessorDsp GetProcessorDsp() noexcept {
     using IS = simd_detector::InstructionSet;
 
-#ifdef DSP_DISPATCH_APPLE
+#if defined(__aarch64__) || defined(_M_ARM64)
     if (simd_detector::is_supported(IS::NEON)) {
         extern ProcessorDsp dsp_neon;
         return dsp_neon;
     }
 #endif
 
-#ifdef DSP_DISPATCH_X86
+#if defined(__x86_64__) || defined(_M_X64)
     if (simd_detector::is_supported(IS::AVX2)) {
         extern ProcessorDsp dsp_avx2;
         return dsp_avx2;

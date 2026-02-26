@@ -75,13 +75,20 @@ PRIVATE
 )
 
 ### simd dispatch
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+if(APPLE)
     target_sources(${PROJECT_NAME}
     PRIVATE
         src/dsp/dsp_neon.cpp
+        src/dsp/dsp_avx2.cpp
+        src/dsp/dsp_avx.cpp
+        src/dsp/dsp_sse4.cpp
+        src/dsp/dsp_sse2.cpp
     )
-    set_source_files_properties("src/dsp/dsp_neon.cpp" PROPERTIES COMPILE_FLAGS "-march=native")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE DSP_DISPATCH_APPLE)
+    set_source_files_properties("src/dsp/dsp_neon.cpp" PROPERTIES COMPILE_FLAGS "-arch arm64")
+    set_source_files_properties("src/dsp/dsp_sse2.cpp" PROPERTIES COMPILE_FLAGS "-arch x86_64 -msse2")
+    set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-arch x86_64 -msse4.1")
+    set_source_files_properties("src/dsp/dsp_avx.cpp" PROPERTIES COMPILE_FLAGS "-arch x86_64 -mavx")
+    set_source_files_properties("src/dsp/dsp_avx2.cpp" PROPERTIES COMPILE_FLAGS "-arch x86_64 -mavx2")
 else()
     target_sources(${PROJECT_NAME}
     PRIVATE
@@ -94,7 +101,6 @@ else()
     set_source_files_properties("src/dsp/dsp_sse4.cpp" PROPERTIES COMPILE_FLAGS "-msse4.1")
     set_source_files_properties("src/dsp/dsp_avx.cpp" PROPERTIES COMPILE_FLAGS "-mavx")
     set_source_files_properties("src/dsp/dsp_avx2.cpp" PROPERTIES COMPILE_FLAGS "-mavx2")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE DSP_DISPATCH_X86)
 endif()
 
 # 头文件目录
