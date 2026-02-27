@@ -24,7 +24,7 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     addAndMakeVisible(poles_);
 
     base_mix_.BindParam(apvt, "base_mix");
-    base_mix_.slider.setTooltip("Set the band0's warp behavior.\nThis value is used to hear the pitch in low warp value.\n0 = no warp, 1 = warp");
+    base_mix_.slider.setTooltip("Set the band0's warp behavior.\nThis value is used to hear the pitch in low warp value.\n0 = warp, 1 = no warp");
     addAndMakeVisible(base_mix_);
 
     pitch_.BindParam(apvt, "pitch");
