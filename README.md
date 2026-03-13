@@ -2,6 +2,9 @@
 尝试重现 prosoniq piwarp 或者 zynaptiq wormhole 插件的效果  
 WarpCore是一个`多段频谱反转`插件，类似于piwarp/wormhole的`时域局部频谱反转`效果  
 
+[youtube](https://www.youtube.com/watch?v=7CM1Xm0MM6E)  
+[bilibili](https://www.bilibili.com/video/BV1UVAkzsEvP)
+
 ## featrue
 - [x] 可配置极点数滤波器
     包括: 滤波器极点数量 滤波器截止频率缩放
