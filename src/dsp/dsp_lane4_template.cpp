@@ -113,59 +113,49 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
                 const float gk = state.svf128.g[k];
                 const float dk = state.svf128.d[k];
 
-                auto s1_re = svf_state->s1_re;
-                auto s1_im = svf_state->s1_im;
-                auto s2_re = svf_state->s2_re;
-                auto s2_im = svf_state->s2_im;
+                auto s1_re_l = svf_state->s1_re_l;
+                auto s1_im_l = svf_state->s1_im_l;
+                auto s2_re_l = svf_state->s2_re_l;
+                auto s2_im_l = svf_state->s2_im_l;
 
-                auto bp_re = dk * (gk * (tmp_l.re - s2_re) + s1_re);
-                auto bp_im = dk * (gk * (tmp_l.im - s2_im) + s1_im);
-                auto v1_re = bp_re - s1_re;
-                auto v1_im = bp_im - s1_im;
-                auto v2_re = gk * bp_re;
-                auto v2_im = gk * bp_im;
-                auto lp_re = v2_re + s2_re;
-                auto lp_im = v2_im + s2_im;
+                auto s1_re_r = svf_state->s1_re_r;
+                auto s1_im_r = svf_state->s1_im_r;
+                auto s2_re_r = svf_state->s2_re_r;
+                auto s2_im_r = svf_state->s2_im_r;
 
-                svf_state->s1_re = bp_re + v1_re;
-                svf_state->s1_im = bp_im + v1_im;
-                svf_state->s2_re = lp_re + v2_re;
-                svf_state->s2_im = lp_im + v2_im;
+                auto bp_re_l = dk * (gk * (tmp_l.re - s2_re_l) + s1_re_l);
+                auto bp_im_l = dk * (gk * (tmp_l.im - s2_im_l) + s1_im_l);
+                auto v1_re_l = bp_re_l - s1_re_l;
+                auto v1_im_l = bp_im_l - s1_im_l;
+                auto v2_re_l = gk * bp_re_l;
+                auto v2_im_l = gk * bp_im_l;
+                auto lp_re_l = v2_re_l + s2_re_l;
+                auto lp_im_l = v2_im_l + s2_im_l;
 
-                ++svf_state;
-                
-                tmp_l.re = lp_re;
-                tmp_l.im = lp_im;
-            }
+                auto bp_re_r = dk * (gk * (tmp_r.re - s2_re_r) + s1_re_r);
+                auto bp_im_r = dk * (gk * (tmp_r.im - s2_im_r) + s1_im_r);
+                auto v1_re_r = bp_re_r - s1_re_r;
+                auto v1_im_r = bp_im_r - s1_im_r;
+                auto v2_re_r = gk * bp_re_r;
+                auto v2_im_r = gk * bp_im_r;
+                auto lp_re_r = v2_re_r + s2_re_r;
+                auto lp_im_r = v2_im_r + s2_im_r;
 
-            #pragma unroll
-            for (int k = 0; k < kPoles; ++k) {
-                const float gk = state.svf128.g[k];
-                const float dk = state.svf128.d[k];
-
-                auto s1_re = svf_state->s1_re;
-                auto s1_im = svf_state->s1_im;
-                auto s2_re = svf_state->s2_re;
-                auto s2_im = svf_state->s2_im;
-
-                auto bp_re = dk * (gk * (tmp_r.re - s2_re) + s1_re);
-                auto bp_im = dk * (gk * (tmp_r.im - s2_im) + s1_im);
-                auto v1_re = bp_re - s1_re;
-                auto v1_im = bp_im - s1_im;
-                auto v2_re = gk * bp_re;
-                auto v2_im = gk * bp_im;
-                auto lp_re = v2_re + s2_re;
-                auto lp_im = v2_im + s2_im;
-
-                svf_state->s1_re = bp_re + v1_re;
-                svf_state->s1_im = bp_im + v1_im;
-                svf_state->s2_re = lp_re + v2_re;
-                svf_state->s2_im = lp_im + v2_im;
+                svf_state->s1_re_l = bp_re_l + v1_re_l;
+                svf_state->s1_im_l = bp_im_l + v1_im_l;
+                svf_state->s2_re_l = lp_re_l + v2_re_l;
+                svf_state->s2_im_l = lp_im_l + v2_im_l;
+                svf_state->s1_re_r = bp_re_r + v1_re_r;
+                svf_state->s1_im_r = bp_im_r + v1_im_r;
+                svf_state->s2_re_r = lp_re_r + v2_re_r;
+                svf_state->s2_im_r = lp_im_r + v2_im_r;
 
                 ++svf_state;
                 
-                tmp_r.re = lp_re;
-                tmp_r.im = lp_im;
+                tmp_l.re = lp_re_l;
+                tmp_l.im = lp_im_l;
+                tmp_r.re = lp_re_r;
+                tmp_r.im = lp_im_r;
             }
 
             // y += (tmp * post_osc_n_val).real();
@@ -190,59 +180,49 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
             const float gk = state.svf128.g[k];
             const float dk = state.svf128.d[k];
 
-            auto s1_re = svf_state->s1_re;
-            auto s1_im = svf_state->s1_im;
-            auto s2_re = svf_state->s2_re;
-            auto s2_im = svf_state->s2_im;
+            auto s1_re_l = svf_state->s1_re_l;
+            auto s1_im_l = svf_state->s1_im_l;
+            auto s2_re_l = svf_state->s2_re_l;
+            auto s2_im_l = svf_state->s2_im_l;
 
-            auto bp_re = dk * (gk * (tmp_l.re - s2_re) + s1_re);
-            auto bp_im = dk * (gk * (tmp_l.im - s2_im) + s1_im);
-            auto v1_re = bp_re - s1_re;
-            auto v1_im = bp_im - s1_im;
-            auto v2_re = gk * bp_re;
-            auto v2_im = gk * bp_im;
-            auto lp_re = v2_re + s2_re;
-            auto lp_im = v2_im + s2_im;
+            auto s1_re_r = svf_state->s1_re_r;
+            auto s1_im_r = svf_state->s1_im_r;
+            auto s2_re_r = svf_state->s2_re_r;
+            auto s2_im_r = svf_state->s2_im_r;
 
-            svf_state->s1_re = bp_re + v1_re;
-            svf_state->s1_im = bp_im + v1_im;
-            svf_state->s2_re = lp_re + v2_re;
-            svf_state->s2_im = lp_im + v2_im;
+            auto bp_re_l = dk * (gk * (tmp_l.re - s2_re_l) + s1_re_l);
+            auto bp_im_l = dk * (gk * (tmp_l.im - s2_im_l) + s1_im_l);
+            auto v1_re_l = bp_re_l - s1_re_l;
+            auto v1_im_l = bp_im_l - s1_im_l;
+            auto v2_re_l = gk * bp_re_l;
+            auto v2_im_l = gk * bp_im_l;
+            auto lp_re_l = v2_re_l + s2_re_l;
+            auto lp_im_l = v2_im_l + s2_im_l;
 
-            ++svf_state;
-            
-            tmp_l.re = lp_re;
-            tmp_l.im = lp_im;
-        }
+            auto bp_re_r = dk * (gk * (tmp_r.re - s2_re_r) + s1_re_r);
+            auto bp_im_r = dk * (gk * (tmp_r.im - s2_im_r) + s1_im_r);
+            auto v1_re_r = bp_re_r - s1_re_r;
+            auto v1_im_r = bp_im_r - s1_im_r;
+            auto v2_re_r = gk * bp_re_r;
+            auto v2_im_r = gk * bp_im_r;
+            auto lp_re_r = v2_re_r + s2_re_r;
+            auto lp_im_r = v2_im_r + s2_im_r;
 
-        #pragma unroll
-        for (int k = 0; k < kPoles; ++k) {
-            const float gk = state.svf128.g[k];
-            const float dk = state.svf128.d[k];
-
-            auto s1_re = svf_state->s1_re;
-            auto s1_im = svf_state->s1_im;
-            auto s2_re = svf_state->s2_re;
-            auto s2_im = svf_state->s2_im;
-
-            auto bp_re = dk * (gk * (tmp_r.re - s2_re) + s1_re);
-            auto bp_im = dk * (gk * (tmp_r.im - s2_im) + s1_im);
-            auto v1_re = bp_re - s1_re;
-            auto v1_im = bp_im - s1_im;
-            auto v2_re = gk * bp_re;
-            auto v2_im = gk * bp_im;
-            auto lp_re = v2_re + s2_re;
-            auto lp_im = v2_im + s2_im;
-
-            svf_state->s1_re = bp_re + v1_re;
-            svf_state->s1_im = bp_im + v1_im;
-            svf_state->s2_re = lp_re + v2_re;
-            svf_state->s2_im = lp_im + v2_im;
+            svf_state->s1_re_l = bp_re_l + v1_re_l;
+            svf_state->s1_im_l = bp_im_l + v1_im_l;
+            svf_state->s2_re_l = lp_re_l + v2_re_l;
+            svf_state->s2_im_l = lp_im_l + v2_im_l;
+            svf_state->s1_re_r = bp_re_r + v1_re_r;
+            svf_state->s1_im_r = bp_im_r + v1_im_r;
+            svf_state->s2_re_r = lp_re_r + v2_re_r;
+            svf_state->s2_im_r = lp_im_r + v2_im_r;
 
             ++svf_state;
             
-            tmp_r.re = lp_re;
-            tmp_r.im = lp_im;
+            tmp_l.re = lp_re_l;
+            tmp_l.im = lp_im_l;
+            tmp_r.re = lp_re_r;
+            tmp_r.im = lp_im_r;
         }
 
         // y += (tmp * post_osc_n_val).real();

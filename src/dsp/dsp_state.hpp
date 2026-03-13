@@ -11,12 +11,16 @@ struct SvfLaneN {
     float d[global::kMaxPoles];
 
     struct SvfState {
-       SimdT s1_re;
-       SimdT s1_im;
-       SimdT s2_re;
-       SimdT s2_im;
+       SimdT s1_re_l;
+       SimdT s1_re_r;
+       SimdT s1_im_l;
+       SimdT s1_im_r;
+       SimdT s2_re_l;
+       SimdT s2_re_r;
+       SimdT s2_im_l;
+       SimdT s2_im_r;
     };
-    simd::Array256<SvfState, 2 * global::kMaxBands * global::kMaxPoles / simd::LaneSize<SimdT>> state;
+    simd::Array256<SvfState, global::kMaxBands * global::kMaxPoles / simd::LaneSize<SimdT>> state;
 
     void Reset() noexcept {
         state.fill(SvfState{});
