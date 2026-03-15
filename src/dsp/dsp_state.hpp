@@ -52,8 +52,6 @@ struct ProcessorState {
     bool pitch_affect{};
 
     // complex sine generator
-    float osc_base_freq{};
-
     float pre_osc_phase{};
     float pre_osc_phase_inc{};
 

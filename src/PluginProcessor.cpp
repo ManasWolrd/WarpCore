@@ -30,10 +30,10 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"f_high", 1},
             "f_high",
-            juce::NormalisableRange<float>{40.0f, 40010.0f, 0.4f}, 40010.0f,
+            juce::NormalisableRange<float>{400.0f, 20010.0f, 0.4f}, 20010.0f,
             juce::AudioParameterFloatAttributes{}.withStringFromValueFunction([](auto x, auto maxlen) -> juce::String {
-                if (x >= 40000.0f) {
-                    return "SampleRate";
+                if (x >= 20000.0f) {
+                    return "Full";
                 }
                 else {
                     return juce::String(x, maxlen);

@@ -34,6 +34,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         state.post_osc_phase += state.post_osc_phase_inc;
         state.post_osc_phase -= std::floor(state.post_osc_phase);
 
+        // e^jwt
         constexpr float twopi = 2.0f * std::numbers::pi_v<float>;
         std::complex<float> pre_osc_f32 = {std::cos(state.pre_osc_phase * twopi), std::sin(state.pre_osc_phase * twopi)};
         std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi), std::sin(state.post_osc_phase * twopi)};
@@ -41,43 +42,61 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
             std::swap(pre_osc_f32, post_osc_f32);
         }
 
-        const auto pre_osc_f32_0 = pre_osc_f32;
-        const auto pre_osc_f32_1 = pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_4 = pre_osc_f32_0 * pre_osc_f32_3;
-        const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_3;
-        const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_3;
-        const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_3;
+        const auto pre_osc_f32_1 = pre_osc_f32;
+        const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32;
+        const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
+        const auto pre_osc_f32_4 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
+        const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_4;
+        const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_4;
+        const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_4;
+        const auto pre_osc_f32_8 = pre_osc_f32_4 * pre_osc_f32_4;
+        const auto pre_osc_f32_9 = pre_osc_f32_5 * pre_osc_f32_4;
+        const auto pre_osc_f32_10 = pre_osc_f32_6 * pre_osc_f32_4;
+        const auto pre_osc_f32_11 = pre_osc_f32_7 * pre_osc_f32_4;
+        const auto pre_osc_f32_12 = pre_osc_f32_8 * pre_osc_f32_4;
+        const auto pre_osc_f32_13 = pre_osc_f32_9 * pre_osc_f32_4;
+        const auto pre_osc_f32_14 = pre_osc_f32_10 * pre_osc_f32_4;
+        const auto pre_osc_f32_15 = pre_osc_f32_11 * pre_osc_f32_4;
+        const auto pre_osc_f32_16 = pre_osc_f32_12 * pre_osc_f32_4;
 
-        const auto post_osc_f32_0 = post_osc_f32;
-        const auto post_osc_f32_1 = post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_4 = post_osc_f32_0 * post_osc_f32_3;
-        const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_3;
-        const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_3;
-        const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_3;
+        const auto post_osc_f32_1 = post_osc_f32;
+        const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32;
+        const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32;
+        const auto post_osc_f32_4 = post_osc_f32 * post_osc_f32 * post_osc_f32 * post_osc_f32;
+        const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_4;
+        const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_4;
+        const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_4;
+        const auto post_osc_f32_8 = post_osc_f32_4 * post_osc_f32_4;
+        const auto post_osc_f32_9 = post_osc_f32_5 * post_osc_f32_4;
+        const auto post_osc_f32_10 = post_osc_f32_6 * post_osc_f32_4;
+        const auto post_osc_f32_11 = post_osc_f32_7 * post_osc_f32_4;
+        const auto post_osc_f32_12 = post_osc_f32_8 * post_osc_f32_4;
+        const auto post_osc_f32_13 = post_osc_f32_9 * post_osc_f32_4;
+        const auto post_osc_f32_14 = post_osc_f32_10 * post_osc_f32_4;
+        const auto post_osc_f32_15 = post_osc_f32_11 * post_osc_f32_4;
+        const auto post_osc_f32_16 = post_osc_f32_12 * post_osc_f32_4;
 
+        // e^j(16w)t
         const simd::Complex256 pre_osc{
-            .re = simd::BroadcastF256(pre_osc_f32_7.real()),
-            .im = simd::BroadcastF256(pre_osc_f32_7.imag()),
+            .re = simd::BroadcastF256(pre_osc_f32_16.real()),
+            .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
         };
         const simd::Complex256 post_osc{
-            .re = simd::BroadcastF256(post_osc_f32_7.real()),
-            .im = simd::BroadcastF256(post_osc_f32_7.imag()),
+            .re = simd::BroadcastF256(post_osc_f32_16.real()),
+            .im = simd::BroadcastF256(post_osc_f32_16.imag()),
         };
+        // 1,3,5,7,9,11,13,15
         simd::Complex256 pre_osc_n_val{
-            .re = {pre_osc_f32_0.real(), pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(),
-                   pre_osc_f32_4.real(), pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real()},
-            .im = {pre_osc_f32_0.imag(), pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(),
-                   pre_osc_f32_4.imag(), pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag()},
+            .re = {pre_osc_f32_1.real(), pre_osc_f32_3.real(), pre_osc_f32_5.real(), pre_osc_f32_7.real(),
+                   pre_osc_f32_9.real(), pre_osc_f32_11.real(), pre_osc_f32_13.real(), pre_osc_f32_15.real()},
+            .im = {pre_osc_f32_1.imag(), pre_osc_f32_3.imag(), pre_osc_f32_5.imag(), pre_osc_f32_7.imag(),
+                   pre_osc_f32_9.imag(), pre_osc_f32_11.imag(), pre_osc_f32_13.imag(), pre_osc_f32_15.imag()},
         };
         simd::Complex256 post_osc_n_val{
-            .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(),
-                   post_osc_f32_4.real(), post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real()},
-            .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
-                   post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
+            .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real(),
+                   post_osc_f32_9.real(), post_osc_f32_11.real(), post_osc_f32_13.real(), post_osc_f32_15.real()},
+            .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
+                   post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
         };
 
         // -------------------- process first band --------------------
@@ -310,21 +329,20 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
     state.pitch_affect = p.pitch_affect;
 
     float fhigh = p.f_high;
-    if (fhigh > 40000.0f) {
-        fhigh = state.fs;
+    if (fhigh > 20000.0f) {
+        fhigh = state.fs / 2;
     }
-    fhigh = std::min(fhigh, state.fs);
+    fhigh = std::min(fhigh, state.fs / 2);
 
-    float finc = fhigh / static_cast<float>(p.bands);
-    float fbase = finc / 2;
+    float f_first_band_stop = fhigh / static_cast<float>(p.bands);
+    float f_first_band_center = f_first_band_stop / 2;
     float fshit = p.pitch_affect ? -p.pitch_shift : p.pitch_shift;
     fshit = std::exp2(fshit / 12.0f);
-    state.osc_base_freq = fbase;
-    state.pre_osc_phase_inc = fbase / state.fs;
+    state.pre_osc_phase_inc = f_first_band_center / state.fs;
     state.post_osc_phase_inc = state.pre_osc_phase_inc * fshit;
 
     // butterworth lowpass
-    float wbase = fbase * 2 * std::numbers::pi_v<float> / state.fs;
+    float wbase = f_first_band_center * 2 * std::numbers::pi_v<float> / state.fs;
     if (p.pitch_affect) {
         wbase *= fshit;
     }
