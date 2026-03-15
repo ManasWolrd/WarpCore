@@ -51,7 +51,7 @@ sudo xattr -dr com.apple.quarantine /path/to/your/plugins/plugin_name.lv2
 ## 构建
 
 ```bash
-git clone --recurse https://github.com/ManasWorld/plugin-template.git
+git clone --recurse https://github.com/ManasWorld/WarpCore.git
 
 # Windows
 cmake -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang -DCMAKE_BUILD_TYPE=Release -S . -B build
