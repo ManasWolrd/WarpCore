@@ -318,7 +318,7 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 
     // butterworth lowpass
     float wbase = f_first_band_center * 2 * std::numbers::pi_v<float> / state.fs;
-    if (!p.pitch_affect) {
+    if (p.pitch_affect) {
         wbase *= fshit;
     }
     float filter_w = wbase * p.filter_scale;
