@@ -32,4 +32,7 @@ private:
 
     juce::Label pitch_affect_label{"", "Formant Mode"};
     ui::Switch pitch_affect_{"Formant", "Pitch"};
+
+    juce::Label freq_label_{"", "Freq Mode"};
+    ui::FlatCombobox freq_mode_{};
 };

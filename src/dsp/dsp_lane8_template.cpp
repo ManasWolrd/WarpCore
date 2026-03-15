@@ -4,7 +4,7 @@
 #include <complex>
 
 namespace warpcore {
-template <int kPoles, bool kPitchAffect>
+template <FreqDistrbution kFreqMode, int kPoles, bool kPitchAffect>
 static void ProcessInternal(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     constexpr simd::Array256<simd::Float256, 8> kBandGainLut{
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
@@ -36,12 +36,15 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
 
         // e^jwt
         constexpr float twopi = 2.0f * std::numbers::pi_v<float>;
-        std::complex<float> pre_osc_f32 = {std::cos(state.pre_osc_phase * twopi), std::sin(state.pre_osc_phase * twopi)};
-        std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi), std::sin(state.post_osc_phase * twopi)};
+        std::complex<float> pre_osc_f32 = {std::cos(state.pre_osc_phase * twopi),
+                                           std::sin(state.pre_osc_phase * twopi)};
+        std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi),
+                                            std::sin(state.post_osc_phase * twopi)};
         if constexpr (kPitchAffect) {
             std::swap(pre_osc_f32, post_osc_f32);
         }
 
+        const auto pre_osc_f32_0 = std::complex{1.0f, 0.0f};
         const auto pre_osc_f32_1 = pre_osc_f32;
         const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32;
         const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
@@ -59,6 +62,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         const auto pre_osc_f32_15 = pre_osc_f32_11 * pre_osc_f32_4;
         const auto pre_osc_f32_16 = pre_osc_f32_12 * pre_osc_f32_4;
 
+        const auto post_osc_f32_0 = std::complex{1.0f, 0.0f};
         const auto post_osc_f32_1 = post_osc_f32;
         const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32;
         const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32;
@@ -76,28 +80,103 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         const auto post_osc_f32_15 = post_osc_f32_11 * post_osc_f32_4;
         const auto post_osc_f32_16 = post_osc_f32_12 * post_osc_f32_4;
 
-        // e^j(16w)t
-        const simd::Complex256 pre_osc{
-            .re = simd::BroadcastF256(pre_osc_f32_16.real()),
-            .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
-        };
-        const simd::Complex256 post_osc{
-            .re = simd::BroadcastF256(post_osc_f32_16.real()),
-            .im = simd::BroadcastF256(post_osc_f32_16.imag()),
-        };
-        // 1,3,5,7,9,11,13,15
-        simd::Complex256 pre_osc_n_val{
-            .re = {pre_osc_f32_1.real(), pre_osc_f32_3.real(), pre_osc_f32_5.real(), pre_osc_f32_7.real(),
-                   pre_osc_f32_9.real(), pre_osc_f32_11.real(), pre_osc_f32_13.real(), pre_osc_f32_15.real()},
-            .im = {pre_osc_f32_1.imag(), pre_osc_f32_3.imag(), pre_osc_f32_5.imag(), pre_osc_f32_7.imag(),
-                   pre_osc_f32_9.imag(), pre_osc_f32_11.imag(), pre_osc_f32_13.imag(), pre_osc_f32_15.imag()},
-        };
-        simd::Complex256 post_osc_n_val{
-            .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real(),
-                   post_osc_f32_9.real(), post_osc_f32_11.real(), post_osc_f32_13.real(), post_osc_f32_15.real()},
-            .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
-                   post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
-        };
+        simd::Complex256 pre_osc;
+        simd::Complex256 post_osc;
+        simd::Complex256 pre_osc_n_val;
+        simd::Complex256 post_osc_n_val;
+
+        if constexpr (kFreqMode == FreqDistrbution::k0_n) {
+            pre_osc = simd::Complex256{
+                .re = simd::BroadcastF256(pre_osc_f32_8.real()),
+                .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
+            };
+            post_osc = simd::Complex256{
+                .re = simd::BroadcastF256(post_osc_f32_8.real()),
+                .im = simd::BroadcastF256(post_osc_f32_8.imag()),
+            };
+
+            pre_osc_n_val = simd::Complex256{
+                .re = {pre_osc_f32_0.real(), pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(),
+                       pre_osc_f32_4.real(), pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real()},
+                .im = {pre_osc_f32_0.imag(), pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(),
+                       pre_osc_f32_4.imag(), pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag()},
+            };
+            post_osc_n_val = simd::Complex256{
+                .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(),
+                       post_osc_f32_4.real(), post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real()},
+                .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
+                       post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
+            };
+        }
+        else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
+            pre_osc = simd::Complex256{
+                .re = simd::BroadcastF256(pre_osc_f32_8.real()),
+                .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
+            };
+            post_osc = simd::Complex256{
+                .re = simd::BroadcastF256(post_osc_f32_8.real()),
+                .im = simd::BroadcastF256(post_osc_f32_8.imag()),
+            };
+
+            pre_osc_n_val = simd::Complex256{
+                .re = {pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(), pre_osc_f32_4.real(),
+                       pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real(), pre_osc_f32_8.real()},
+                .im = {pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(), pre_osc_f32_4.imag(),
+                       pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag(), pre_osc_f32_8.imag()},
+            };
+            post_osc_n_val = simd::Complex256{
+                .re = {post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(), post_osc_f32_4.real(),
+                       post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real(), post_osc_f32_8.real()},
+                .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag(),
+                       post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag(), post_osc_f32_8.imag()},
+            };
+        }
+        else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
+            pre_osc = simd::Complex256{
+                .re = simd::BroadcastF256(pre_osc_f32_16.real()),
+                .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
+            };
+            post_osc = simd::Complex256{
+                .re = simd::BroadcastF256(post_osc_f32_16.real()),
+                .im = simd::BroadcastF256(post_osc_f32_16.imag()),
+            };
+
+            pre_osc_n_val = simd::Complex256{
+                .re = {pre_osc_f32_0.real(), pre_osc_f32_2.real(), pre_osc_f32_4.real(), pre_osc_f32_6.real(),
+                       pre_osc_f32_8.real(), pre_osc_f32_10.real(), pre_osc_f32_12.real(), pre_osc_f32_14.real()},
+                .im = {pre_osc_f32_0.imag(), pre_osc_f32_2.imag(), pre_osc_f32_4.imag(), pre_osc_f32_6.imag(),
+                       pre_osc_f32_8.imag(), pre_osc_f32_10.imag(), pre_osc_f32_12.imag(), pre_osc_f32_14.imag()},
+            };
+            post_osc_n_val = simd::Complex256{
+                .re = {post_osc_f32_0.real(), post_osc_f32_2.real(), post_osc_f32_4.real(), post_osc_f32_6.real(),
+                       post_osc_f32_8.real(), post_osc_f32_10.real(), post_osc_f32_12.real(), post_osc_f32_14.real()},
+                .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag(),
+                       post_osc_f32_8.imag(), post_osc_f32_10.imag(), post_osc_f32_12.imag(), post_osc_f32_14.imag()},
+            };
+        }
+        else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
+            pre_osc = simd::Complex256{
+                .re = simd::BroadcastF256(pre_osc_f32_16.real()),
+                .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
+            };
+            post_osc = simd::Complex256{
+                .re = simd::BroadcastF256(post_osc_f32_16.real()),
+                .im = simd::BroadcastF256(post_osc_f32_16.imag()),
+            };
+
+            pre_osc_n_val = simd::Complex256{
+                .re = {pre_osc_f32_1.real(), pre_osc_f32_3.real(), pre_osc_f32_5.real(), pre_osc_f32_7.real(),
+                       pre_osc_f32_9.real(), pre_osc_f32_11.real(), pre_osc_f32_13.real(), pre_osc_f32_15.real()},
+                .im = {pre_osc_f32_1.imag(), pre_osc_f32_3.imag(), pre_osc_f32_5.imag(), pre_osc_f32_7.imag(),
+                       pre_osc_f32_9.imag(), pre_osc_f32_11.imag(), pre_osc_f32_13.imag(), pre_osc_f32_15.imag()},
+            };
+            post_osc_n_val = simd::Complex256{
+                .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real(),
+                       post_osc_f32_9.real(), post_osc_f32_11.real(), post_osc_f32_13.real(), post_osc_f32_15.real()},
+                .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
+                       post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
+            };
+        }
 
         // -------------------- process first band --------------------
         float x_left = left[i];
@@ -105,7 +184,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
 
         std::complex<float> cpx_x_left = x_left * pre_osc_f32;
         std::complex<float> cpx_x_right = x_right * pre_osc_f32;
-        #pragma unroll
+#pragma unroll
         for (int k = 0; k < kPoles; ++k) {
             const float gk = state.svf256.g[k];
             const float dk = state.svf256.d[k];
@@ -122,7 +201,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
             auto v2_r = gk * bp_r;
             auto lp_l = v2_l + s2_l;
             auto lp_r = v2_r + s2_r;
-            
+
             s1_l = bp_l + v1_l;
             s1_r = bp_r + v1_r;
             s2_l = lp_l + v2_l;
@@ -144,7 +223,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
             auto tmp_r = simd::BroadcastF256(x_right) * pre_osc_n_val;
             pre_osc_n_val *= pre_osc;
 
-            #pragma unroll
+#pragma unroll
             for (int k = 0; k < kPoles; ++k) {
                 const float gk = state.svf128.g[k];
                 const float dk = state.svf128.d[k];
@@ -187,7 +266,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
                 svf_state->s2_im_r = lp_im_r + v2_im_r;
 
                 ++svf_state;
-                
+
                 tmp_l.re = lp_re_l;
                 tmp_l.im = lp_im_l;
                 tmp_r.re = lp_re_r;
@@ -211,7 +290,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
         auto tmp_l = simd::BroadcastF256(x_left) * pre_osc_n_val;
         auto tmp_r = simd::BroadcastF256(x_right) * pre_osc_n_val;
 
-        #pragma unroll
+#pragma unroll
         for (int k = 0; k < kPoles; ++k) {
             const float gk = state.svf128.g[k];
             const float dk = state.svf128.d[k];
@@ -254,7 +333,7 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
             svf_state->s2_im_r = lp_im_r + v2_im_r;
 
             ++svf_state;
-            
+
             tmp_l.re = lp_re_l;
             tmp_l.im = lp_im_l;
             tmp_r.re = lp_re_r;
@@ -273,35 +352,53 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
     }
 }
 
-template <bool kPitchAffect>
+template <FreqDistrbution kFreqMode, bool kPitchAffect>
 static void ProcessPoles(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     switch (state.poles) {
         case 1:
-            ProcessInternal<1, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 1, kPitchAffect>(state, left, right, num_samples);
             break;
         case 2:
-            ProcessInternal<2, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 2, kPitchAffect>(state, left, right, num_samples);
             break;
         case 3:
-            ProcessInternal<3, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 3, kPitchAffect>(state, left, right, num_samples);
             break;
         case 4:
-            ProcessInternal<4, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 4, kPitchAffect>(state, left, right, num_samples);
             break;
         case 5:
-            ProcessInternal<5, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 5, kPitchAffect>(state, left, right, num_samples);
             break;
         case 6:
-            ProcessInternal<6, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 6, kPitchAffect>(state, left, right, num_samples);
             break;
         case 7:
-            ProcessInternal<7, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 7, kPitchAffect>(state, left, right, num_samples);
             break;
         case 8:
-            ProcessInternal<8, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 8, kPitchAffect>(state, left, right, num_samples);
             break;
         default:
             assert(false);
+            break;
+    }
+}
+
+template <bool kPitchAffect>
+static void ProcessPitchAffect(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
+    switch (state.freq_distribution) {
+        case FreqDistrbution::k0_n:
+            ProcessPoles<FreqDistrbution::k0_n, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k1_n:
+            ProcessPoles<FreqDistrbution::k1_n, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k0_2n:
+            ProcessPoles<FreqDistrbution::k0_2n, kPitchAffect>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k1_2n:
+            ProcessPoles<FreqDistrbution::k1_2n, kPitchAffect>(state, left, right, num_samples);
             break;
     }
 }
@@ -327,6 +424,7 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
     state.num_warps = p.bands;
     state.base_mix = p.base_mix;
     state.pitch_affect = p.pitch_affect;
+    state.freq_distribution = p.freq_distribution;
 
     float fhigh = p.f_high;
     if (fhigh > 20000.0f) {
@@ -336,6 +434,11 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 
     float f_first_band_stop = fhigh / static_cast<float>(p.bands);
     float f_first_band_center = f_first_band_stop / 2;
+
+    if (state.freq_distribution == FreqDistrbution::k0_n || state.freq_distribution == FreqDistrbution::k1_n) {
+        f_first_band_center *= 2;
+    }
+
     float fshit = p.pitch_affect ? -p.pitch_shift : p.pitch_shift;
     fshit = std::exp2(fshit / 12.0f);
     state.pre_osc_phase_inc = f_first_band_center / state.fs;
@@ -343,8 +446,15 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 
     // butterworth lowpass
     float wbase = f_first_band_center * 2 * std::numbers::pi_v<float> / state.fs;
-    if (p.pitch_affect) {
-        wbase *= fshit;
+    if (state.freq_distribution == FreqDistrbution::k0_n || state.freq_distribution == FreqDistrbution::k1_n) {
+        if (p.pitch_affect) {
+            wbase *= fshit;
+        }
+    }
+    else {
+        if (!p.pitch_affect) {
+            wbase *= fshit;
+        }
     }
     float filter_w = wbase * p.filter_scale;
     filter_w = std::min(filter_w, std::numbers::pi_v<float> - 0.1f);
@@ -358,10 +468,10 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 
 static void Process(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     if (state.pitch_affect) {
-        ProcessPoles<true>(state, left, right, num_samples);
+        ProcessPitchAffect<true>(state, left, right, num_samples);
     }
     else {
-        ProcessPoles<false>(state, left, right, num_samples);
+        ProcessPitchAffect<false>(state, left, right, num_samples);
     }
 }
 
@@ -373,10 +483,5 @@ static void Process(warpcore::ProcessorState& state, float* left, float* right, 
 #error "不应该编译这个文件,在其他cpp包含这个cpp并定义DSP_EXPORT_NAME=`dsp_dispatch.cpp里的变量`"
 #endif
 
-ProcessorDsp DSP_EXPORT_NAME{
-    Init,
-    Reset,
-    Update,
-    Process
-};
-}
+ProcessorDsp DSP_EXPORT_NAME{Init, Reset, Update, Process};
+} // namespace warpcore

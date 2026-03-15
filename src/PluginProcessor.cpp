@@ -18,7 +18,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterInt>(
             juce::ParameterID{"warp", 1},
             "warp",
-            1, global::kMaxBands, 64
+            1, global::kMaxBands, 128
         );
         param_listener_.Add(p, [this](int v) {
             param_.bands = v;
@@ -30,7 +30,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"f_high", 1},
             "f_high",
-            juce::NormalisableRange<float>{400.0f, 20010.0f, 0.4f}, 20010.0f,
+            juce::NormalisableRange<float>{4000.0f, 20010.0f, 0.4f}, 20010.0f,
             juce::AudioParameterFloatAttributes{}.withStringFromValueFunction([](auto x, auto maxlen) -> juce::String {
                 if (x >= 20000.0f) {
                     return "Full";
@@ -62,7 +62,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"pitch", 1},
             "pitch",
-            juce::NormalisableRange<float>{-12.0f, 12.0f, 0.01f}, 0.0f
+            juce::NormalisableRange<float>{-24.0f, 24.0f, 0.01f}, 0.0f
         );
         param_listener_.Add(p, [this](float v) {
             param_.pitch_shift = v;
@@ -102,6 +102,24 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         );
         param_listener_.Add(p, [this](int v) {
             param_.filter_order = v;
+            param_changed_ = true;
+        });
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterChoice>(
+            juce::ParameterID{"freq_mode", 1},
+            "freq_mode",
+            juce::StringArray{
+                "voice: 0 + n",
+                "voice: 1 + n",
+                "music: 0 + 2n",
+                "music: 1 + 2n",
+            },
+            3
+        );
+        param_listener_.Add(p, [this](int v) {
+            param_.freq_distribution = static_cast<warpcore::FreqDistrbution>(v);
             param_changed_ = true;
         });
         layout.add(std::move(p));

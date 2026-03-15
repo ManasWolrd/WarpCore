@@ -21,7 +21,7 @@ static_assert(std::is_base_of_v<juce::Component, PluginUi>, "PluginUi must inher
 
 EmptyAudioProcessorEditor::EmptyAudioProcessorEditor(EmptyAudioProcessor& p)
     : AudioProcessorEditor(&p)
-    , tooltip_(this, 1000)
+    , tooltip_(this, 500)
     , ui_(p) {
     auto ui_bound = ui_.getLocalBounds();
     if (ui_bound.isEmpty()) {

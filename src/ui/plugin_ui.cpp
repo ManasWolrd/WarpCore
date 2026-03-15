@@ -37,6 +37,12 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     ui::SetLableBlack(pitch_affect_label);
     addAndMakeVisible(pitch_affect_label);
 
+    freq_mode_.BindParam(apvt, "freq_mode");
+    freq_mode_.setTooltip("Set the frequency distribution.\n*voice mode is best for making robotic sounds.\n*music mode is best for making negative harmony sounds");
+    addAndMakeVisible(freq_mode_);
+    ui::SetLableBlack(freq_label_);
+    addAndMakeVisible(freq_label_);
+
     setSize(480, 160);
 }
 
@@ -52,9 +58,12 @@ void PluginUi::resized() {
     pitch_.setBounds(line.removeFromLeft(80));
     base_mix_.setBounds(line.removeFromLeft(80));
 
-    b.removeFromLeft(pitch_.getBounds().getX());
+    auto top_left_b = b.removeFromLeft(pitch_.getBounds().getX());
     pitch_affect_.setBounds(b.withWidth(pitch_.getWidth()).reduced(2));
     pitch_affect_label.setBounds(pitch_affect_.getBounds().translated(-100, 0).withWidth(100));
+
+    freq_label_.setBounds(top_left_b.removeFromLeft(80));
+    freq_mode_.setBounds(top_left_b.removeFromLeft(120).reduced(2));
 }
 
 void PluginUi::paint(juce::Graphics& g) {

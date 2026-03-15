@@ -44,12 +44,20 @@ struct SvfLaneN {
     }
 };
 
+enum class FreqDistrbution {
+    k0_n,
+    k1_n,
+    k0_2n,
+    k1_2n,
+};
+
 struct ProcessorState {
     float fs{};
     int num_warps{};
     int poles{};
     float base_mix{};
     bool pitch_affect{};
+    FreqDistrbution freq_distribution{};
 
     // complex sine generator
     float pre_osc_phase{};
@@ -77,6 +85,7 @@ struct Param {
     float pitch_shift;
     float base_mix;
     bool pitch_affect;
+    FreqDistrbution freq_distribution;
 };
 
 struct ProcessorDsp {
