@@ -10,7 +10,8 @@ If you want to know how to reverse the spectrum, here are the resources I referr
 [Spectral Flipping Around Signal Center Frequency](https://dsprelated.com/showarticle/37.php)
 
 > [!WARNING]
-> These demo videos are old version which has a bad quality on complex source like music signal.  
+> These demo videos are old version which has a bad quality on complex source like music signal.
+> 这些演示视频是旧版本，在复杂的音乐信号上质量很差。  
 [YouTube](https://www.youtube.com/watch?v=7CM1Xm0MM6E)  
 [Bilibili](https://www.bilibili.com/video/BV1UVAkzsEvP)
 
@@ -45,8 +46,8 @@ If you want to know how to reverse the spectrum, here are the resources I referr
 ![display](doc/gui.png)
 
 > [!TIP]
-> if you want a close preset to **default Piwarp**  
-> set paramter  
+> if you want a close preset to **default Piwarp**, set paramter  
+> 如果你想要一个接近默认Piwarp的预设，设置参数为  
 > **Warp** = 50  
 > **Freq High** = Full  
 > **Scale** = 1.5  
