@@ -8,8 +8,7 @@ WarpCore is a `multi-band spectrum inversion` plugin, similar to the `local time
 [YouTube](https://www.youtube.com/watch?v=7CM1Xm0MM6E)  
 [Bilibili](https://www.bilibili.com/video/BV1UVAkzsEvP)
 
-## 功能
-## Features
+## 功能(Features)
 
 - [x] 可配置极点数滤波器  
   Configurable filter pole count.
@@ -35,8 +34,7 @@ WarpCore is a `multi-band spectrum inversion` plugin, similar to the `local time
   应该是加在输出的振荡器上面。  
   This should be applied on the output oscillator stage.
 
-## 图形界面
-## GUI
+## 图形界面(GUI)
 
 ![display](doc/gui.png)
 
@@ -59,7 +57,7 @@ sudo xattr -dr com.apple.quarantine /path/to/your/plugins/plugin_name.vst3
 sudo xattr -dr com.apple.quarantine /path/to/your/plugins/plugin_name.lv2
 ```
 
-## 构建
+## 构建(Build)
 
 ```bash
 git clone --recurse https://github.com/ManasWorld/WarpCore.git
