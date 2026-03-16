@@ -86,7 +86,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterFloat>(
             juce::ParameterID{"base_mix", 1},
             "base_mix",
-            juce::NormalisableRange<float>{0.0f, 1.0f, 0.01f}, 1.0f
+            juce::NormalisableRange<float>{0.0f, 1.0f, 0.01f}, 0.0f
         );
         param_listener_.Add(p, [this](float v) {
             param_.base_mix = v;
