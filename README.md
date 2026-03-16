@@ -9,6 +9,8 @@ WarpCore is a `multi-band spectrum inversion` plugin, similar to the `local time
 If you want to know how to reverse the spectrum, here are the resources I referred to.  
 [Spectral Flipping Around Signal Center Frequency](https://dsprelated.com/showarticle/37.php)
 
+> [!WARNING]
+> These demo videos are old version which has a bad quality on complex source like music signal.  
 [YouTube](https://www.youtube.com/watch?v=7CM1Xm0MM6E)  
 [Bilibili](https://www.bilibili.com/video/BV1UVAkzsEvP)
 
