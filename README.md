@@ -40,6 +40,17 @@ WarpCore is a `multi-band spectrum inversion` plugin, similar to the `local time
 
 ![display](doc/gui.png)
 
+> [!TIP]
+> if you want a close preset to **default Piwarp**  
+> set paramter  
+> **Warp** = 50  
+> **Freq High** = Full  
+> **Scale** = 1.0  
+> **Poles** = 2  
+> **Pitch** = 0  
+> **Base Mix** = 0  
+> **Freq Mode** = music: 0 + 2n  
+
 ## macOS
 
 ```bash
