@@ -43,8 +43,8 @@ WarpCore is a `multi-band spectrum inversion` plugin, similar to the `local time
 > set paramter  
 > **Warp** = 50  
 > **Freq High** = Full  
-> **Scale** = 1.0  
-> **Poles** = 2  
+> **Scale** = 1.5  
+> **Poles** = 3  
 > **Pitch** = 0  
 > **Base Mix** = 0  
 > **Freq Mode** = music: 0 + 2n  
