@@ -4,7 +4,7 @@
 #include <complex>
 
 namespace warpcore {
-template <FreqDistrbution kFreqMode, int kPoles, bool kPitchAffect>
+template <FreqDistrbution kFreqMode, int kPoles>
 static void ProcessInternal(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     constexpr simd::Array128<simd::Float128, 4> kBandGainLut{
         simd::Float128{1.0f, 1.0f, 1.0f, 1.0f},
@@ -36,9 +36,6 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
                                            std::sin(state.pre_osc_phase * twopi)};
         std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi),
                                             std::sin(state.post_osc_phase * twopi)};
-        if constexpr (kPitchAffect) {
-            std::swap(pre_osc_f32, post_osc_f32);
-        }
 
         const auto pre_osc_f32_0 = std::complex{1.0f, 0.0f};
         const auto pre_osc_f32_1 = pre_osc_f32;
@@ -316,53 +313,35 @@ static void ProcessInternal(warpcore::ProcessorState& state, float* left, float*
     }
 }
 
-template <FreqDistrbution kFreqMode, bool kPitchAffect>
+template <FreqDistrbution kFreqMode>
 static void ProcessPoles(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     switch (state.poles) {
         case 1:
-            ProcessInternal<kFreqMode, 1, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 1>(state, left, right, num_samples);
             break;
         case 2:
-            ProcessInternal<kFreqMode, 2, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 2>(state, left, right, num_samples);
             break;
         case 3:
-            ProcessInternal<kFreqMode, 3, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 3>(state, left, right, num_samples);
             break;
         case 4:
-            ProcessInternal<kFreqMode, 4, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 4>(state, left, right, num_samples);
             break;
         case 5:
-            ProcessInternal<kFreqMode, 5, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 5>(state, left, right, num_samples);
             break;
         case 6:
-            ProcessInternal<kFreqMode, 6, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 6>(state, left, right, num_samples);
             break;
         case 7:
-            ProcessInternal<kFreqMode, 7, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 7>(state, left, right, num_samples);
             break;
         case 8:
-            ProcessInternal<kFreqMode, 8, kPitchAffect>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 8>(state, left, right, num_samples);
             break;
         default:
             assert(false);
-            break;
-    }
-}
-
-template <bool kPitchAffect>
-static void ProcessPitchAffect(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
-    switch (state.freq_distribution) {
-        case FreqDistrbution::k0_n:
-            ProcessPoles<FreqDistrbution::k0_n, kPitchAffect>(state, left, right, num_samples);
-            break;
-        case FreqDistrbution::k1_n:
-            ProcessPoles<FreqDistrbution::k1_n, kPitchAffect>(state, left, right, num_samples);
-            break;
-        case FreqDistrbution::k0_2n:
-            ProcessPoles<FreqDistrbution::k0_2n, kPitchAffect>(state, left, right, num_samples);
-            break;
-        case FreqDistrbution::k1_2n:
-            ProcessPoles<FreqDistrbution::k1_2n, kPitchAffect>(state, left, right, num_samples);
             break;
     }
 }
@@ -390,23 +369,39 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
     state.pitch_affect = p.pitch_affect;
     state.freq_distribution = p.freq_distribution;
 
-    float fhigh = p.f_high;
+        float fhigh = p.f_high;
+    float fshit = p.pitch_affect ? -p.pitch_shift : p.pitch_shift;
+    fshit = std::exp2(fshit / 12.0f);
+
     if (fhigh > 20000.0f) {
         fhigh = state.fs / 2;
     }
     fhigh = std::min(fhigh, state.fs / 2);
 
+    if (state.pitch_affect && p.pitch_shift < 0.0f) {
+        // formant anti-alasing
+        fhigh /= fshit;
+    }
+
     float f_first_band_stop = fhigh / static_cast<float>(p.bands);
     float f_first_band_center = f_first_band_stop / 2;
+
+    if (!state.pitch_affect && p.pitch_shift > 0.0f) {
+        // pitch anti-alasing
+        f_first_band_stop *= fshit;
+        state.num_warps = static_cast<int>(fhigh / f_first_band_stop);
+    }
 
     if (state.freq_distribution == FreqDistrbution::k0_n || state.freq_distribution == FreqDistrbution::k1_n) {
         f_first_band_center *= 2;
     }
 
-    float fshit = p.pitch_affect ? -p.pitch_shift : p.pitch_shift;
-    fshit = std::exp2(fshit / 12.0f);
     state.pre_osc_phase_inc = f_first_band_center / state.fs;
     state.post_osc_phase_inc = state.pre_osc_phase_inc * fshit;
+
+    if (p.pitch_affect) {
+        std::swap(state.pre_osc_phase_inc, state.post_osc_phase_inc);
+    }
 
     // butterworth lowpass
     float wbase = f_first_band_center * 2 * std::numbers::pi_v<float> / state.fs;
@@ -431,11 +426,19 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 }
 
 static void Process(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
-    if (state.pitch_affect) {
-        ProcessPitchAffect<true>(state, left, right, num_samples);
-    }
-    else {
-        ProcessPitchAffect<false>(state, left, right, num_samples);
+    switch (state.freq_distribution) {
+        case FreqDistrbution::k0_n:
+            ProcessPoles<FreqDistrbution::k0_n>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k1_n:
+            ProcessPoles<FreqDistrbution::k1_n>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k0_2n:
+            ProcessPoles<FreqDistrbution::k0_2n>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k1_2n:
+            ProcessPoles<FreqDistrbution::k1_2n>(state, left, right, num_samples);
+            break;
     }
 }
 
