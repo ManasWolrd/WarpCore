@@ -5,6 +5,10 @@ This project attempts to recreate the effect style of Prosoniq PiWarp or Zynapti
 WarpCore 是一个`多段频谱反转`插件，类似于 PiWarp/Wormhole 的`时域局部频谱反转`效果。  
 WarpCore is a `multi-band spectrum inversion` plugin, similar to the `local time-domain spectrum inversion` effect of PiWarp/Wormhole.
 
+如果你想了解如何做到反转频谱，这里是我参考的资源。  
+If you want to know how to reverse the spectrum, here are the resources I referred to.  
+[Spectral Flipping Around Signal Center Frequency](https://dsprelated.com/showarticle/37.php)
+
 [YouTube](https://www.youtube.com/watch?v=7CM1Xm0MM6E)  
 [Bilibili](https://www.bilibili.com/video/BV1UVAkzsEvP)
 
