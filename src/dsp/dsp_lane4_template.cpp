@@ -390,6 +390,7 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
         // pitch anti-alasing
         f_first_band_stop *= fshit;
         state.num_warps = static_cast<int>(fhigh / f_first_band_stop);
+        state.num_warps = std::max(state.num_warps, 1);
     }
 
     if (state.freq_distribution == FreqDistrbution::k0_n || state.freq_distribution == FreqDistrbution::k1_n) {
