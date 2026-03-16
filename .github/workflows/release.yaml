@@ -44,7 +44,7 @@ jobs:
       shell: cmd
 
     - name: Prepare Artifacts
-      shell: bash
+      shell: pwsh
       run: |
         mkdir -p dist_win
         cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_win/VST3
@@ -82,11 +82,11 @@ jobs:
       run: cat "./build/CMakeFiles/CMakeError.log" || true
 
     - name: Prepare Artifacts
-      shell: bash
+      shell: pwsh
       run: |
         mkdir -p dist_mac
-        cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_mac/VST3 2>/dev/null || true
-        cp -r ./build/*_artefacts/Release/AU/*.component ./dist_mac/AU 2>/dev/null || true
+        cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_mac/VST3
+        cp -r ./build/*_artefacts/Release/AU/*.component ./dist_mac/AU
 
     - name: Upload
       uses: actions/upload-artifact@v4
@@ -135,11 +135,11 @@ jobs:
       run: cat "./build/CMakeFiles/CMakeError.log" || true
 
     - name: Prepare Artifacts
-      shell: bash
+      shell: pwsh
       run: |
         mkdir -p dist_linux
-        cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_linux/VST3 2>/dev/null || true
-        cp -r ./build/*_artefacts/Release/LV2/*.lv2 ./dist_linux/LV2 2>/dev/null || true
+        cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_linux/VST3
+        cp -r ./build/*_artefacts/Release/LV2/*.lv2 ./dist_linux/LV2
 
     - name: Upload
       uses: actions/upload-artifact@v4
