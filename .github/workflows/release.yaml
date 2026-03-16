@@ -43,14 +43,21 @@ jobs:
         if exist .\build\CMakeFiles\CMakeError.log type .\build\CMakeFiles\CMakeError.log
       shell: cmd
 
+    - name: Prepare Artifacts
+      shell: bash
+      run: |
+        mkdir -p dist_win
+        cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_win/VST3
+
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: plugin-win
-        path: |
-          ./build/*_artefacts/Release/*
-          !./build/*_artefacts/Release/VST3/*.exp
-          !./build/*_artefacts/Release/VST3/*.lib
+        path: ./dist_win
+        # path: |
+        # ./build/*_artefacts/Release/VST3
+        # !./build/*_artefacts/Release/VST3/*.exp
+        # !./build/*_artefacts/Release/VST3/*.lib
 
   build-macos:
     runs-on: macos-latest
@@ -74,14 +81,23 @@ jobs:
     - name: List errors
       run: cat "./build/CMakeFiles/CMakeError.log" || true
 
+    - name: Prepare Artifacts
+      shell: bash
+      run: |
+        mkdir -p dist_mac
+        cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_mac/VST3 2>/dev/null || true
+        cp -r ./build/*_artefacts/Release/AU/*.component ./dist_mac/AU 2>/dev/null || true
+
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: plugin-macos
-        path: |
-          ./build/*_artefacts/Release/*
-          !./build/*_artefacts/Release/VST3/*.exp
-          !./build/*_artefacts/Release/VST3/*.lib
+        path: ./dist_mac
+        # path: |
+        #   ./build/*_artefacts/Release/AU
+        #   ./build/*_artefacts/Release/VST3
+        #   !./build/*_artefacts/Release/VST3/*.exp
+        #   !./build/*_artefacts/Release/VST3/*.lib
 
   build-linux:
     runs-on: ubuntu-22.04
@@ -118,14 +134,23 @@ jobs:
     - name: List errors
       run: cat "./build/CMakeFiles/CMakeError.log" || true
 
+    - name: Prepare Artifacts
+      shell: bash
+      run: |
+        mkdir -p dist_linux
+        cp -r ./build/*_artefacts/Release/VST3/*.vst3 ./dist_linux/VST3 2>/dev/null || true
+        cp -r ./build/*_artefacts/Release/LV2/*.lv2 ./dist_linux/LV2 2>/dev/null || true
+
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: plugin-linux
-        path: |
-          ./build/*_artefacts/Release/*
-          !./build/*_artefacts/Release/VST3/*.exp
-          !./build/*_artefacts/Release/VST3/*.lib
+        path: ./dist_linux
+        # path: |
+        #   ./build/*_artefacts/Release/LV2
+        #   ./build/*_artefacts/Release/VST3
+        #   !./build/*_artefacts/Release/VST3/*.exp
+        #   !./build/*_artefacts/Release/VST3/*.lib
 
   release:
     runs-on: ubuntu-latest
