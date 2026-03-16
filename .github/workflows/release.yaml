@@ -48,7 +48,7 @@ jobs:
       with:
         name: plugin-win
         path: |
-          ./build/*_artefacts/Release/VST3
+          ./build/*_artefacts/Release/*
           !./build/*_artefacts/Release/VST3/*.exp
           !./build/*_artefacts/Release/VST3/*.lib
 
@@ -79,8 +79,7 @@ jobs:
       with:
         name: plugin-macos
         path: |
-          ./build/*_artefacts/Release/AU
-          ./build/*_artefacts/Release/VST3
+          ./build/*_artefacts/Release/*
           !./build/*_artefacts/Release/VST3/*.exp
           !./build/*_artefacts/Release/VST3/*.lib
 
@@ -124,8 +123,7 @@ jobs:
       with:
         name: plugin-linux
         path: |
-          ./build/*_artefacts/Release/LV2
-          ./build/*_artefacts/Release/VST3
+          ./build/*_artefacts/Release/*
           !./build/*_artefacts/Release/VST3/*.exp
           !./build/*_artefacts/Release/VST3/*.lib
 
