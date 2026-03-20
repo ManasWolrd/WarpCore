@@ -15,8 +15,8 @@ If you want to know how to reverse the spectrum, here are the resources I referr
 [YouTube](https://www.youtube.com/watch?v=7CM1Xm0MM6E)  
 [Bilibili](https://www.bilibili.com/video/BV1UVAkzsEvP)
 
-[Bilibili New version Demo](https://www.bilibili.com/video/BV1WfwRzEEjK)
-[Bilibili WarpCore cestroy the whole song](https://www.bilibili.com/video/BV1tpA5zyEo2/?vd_source=cf6c1428543c91c6a5be3a36f554c1c6)
+[Bilibili New version Demo](https://www.bilibili.com/video/BV1WfwRzEEjK)  
+[Bilibili WarpCore cestroy the whole song](https://www.bilibili.com/video/BV1tpA5zyEo2/?vd_source=cf6c1428543c91c6a5be3a36f554c1c6)  
 
 ## 功能(Features)
 
