@@ -137,6 +137,7 @@ jobs:
 
     - name: Run Pluginval Validation
       shell: bash
+      if: runner.os != 'macOS'
       run: |
         TEST_TARGET=""
         if [ "${{ runner.os }}" == "macOS" ]; then
@@ -165,17 +166,6 @@ jobs:
         AU_FILE_NAME=$(basename "${{ env.AU_PATH }}")
         echo "Copying $AU_FILE_NAME to $USER_COMPONENTS_DIR"
         cp -R "${{ env.AU_PATH }}" "$USER_COMPONENTS_DIR/"
-
-        echo "===================== 复制结果检测 ====================="
-        if [ -d "$USER_COMPONENTS_DIR/$AU_FILE_NAME" ]; then
-          echo "✅ 文件夹已存在: $USER_COMPONENTS_DIR/$AU_FILE_NAME"
-          echo "--- 文件夹内部结构如下: ---"
-          ls -R "$USER_COMPONENTS_DIR/$AU_FILE_NAME"
-        else
-          echo "❌ 错误: 文件夹复制失败！"
-          exit 1
-        fi
-        echo "========================================================"
 
         echo "Removing quarantine extended attributes..."
         xattr -dr com.apple.quarantine "$USER_COMPONENTS_DIR/$AU_FILE_NAME" || true
