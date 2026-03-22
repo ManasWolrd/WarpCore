@@ -137,20 +137,8 @@ jobs:
 
     - name: Run Pluginval Validation
       shell: bash
-      if: runner.os != 'macOS'
       run: |
-        TEST_TARGET=""
-        if [ "${{ runner.os }}" == "macOS" ]; then
-          TEST_TARGET="${{ env.AU_PATH }}"
-        else
-          TEST_TARGET="${{ env.VST3_PATH }}"
-        fi
-
-        if [ -z "$TEST_TARGET" ]; then
-          echo "Error: No plugin binary found to test!"
-          exit 1
-        fi
-
+        TEST_TARGET="${{ env.VST3_PATH }}"
         ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
       env:
         STRICTNESS_LEVEL: 5
