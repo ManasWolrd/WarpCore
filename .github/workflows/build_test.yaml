@@ -159,14 +159,21 @@ jobs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
+        if [ ! -d "${{ env.AU_PATH }}" ]; then
+          echo "Error: AU Plugin not found at ${{ env.AU_PATH }}"
+          exit 1
+        fi
+
         AU_FILE_NAME=$(basename "${{ env.AU_PATH }}")
 
-        sudo mkdir -p "/Library/Audio/Plug-ins/Components"
-        sudo cp -r "${{ env.AU_PATH }}" "/Library/Audio/Plug-ins/Components/"
+        USER_COMPONENTS_DIR="$HOME/Library/Audio/Plug-Ins/Components"
+        mkdir -p "$USER_COMPONENTS_DIR"
 
-        sudo killall -9 AudioComponentRegistrar || true
+        cp -R "${{ env.AU_PATH }}" "$USER_COMPONENTS_DIR/"
 
-        ${{ matrix.pluginval-binary }} --verbose --validate "/Library/Audio/Plug-ins/Components/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+        killall -9 AudioComponentRegistrar || true
+
+        ${{ matrix.pluginval-binary }} --verbose --validate "$USER_COMPONENTS_DIR/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
       env:
         STRICTNESS_LEVEL: 10
         TIMEOUT_MS: 1440000
