@@ -5,6 +5,7 @@
 PluginUi::PluginUi(EmptyAudioProcessor& p)
     : preset_(*p.preset_manager_) {
     addAndMakeVisible(preset_);
+    preset_.SetDspInstName(p.dsp_processor_.name);
 
     auto& apvt = *p.value_tree_;
     warp_.BindParam(apvt, "warp");
