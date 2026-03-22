@@ -451,5 +451,5 @@ static void Process(warpcore::ProcessorState& state, float* left, float* right, 
 #error "不应该编译这个文件,在其他cpp包含这个cpp并定义DSP_EXPORT_NAME=`dsp_dispatch.cpp里的变量`"
 #endif
 
-ProcessorDsp DSP_EXPORT_NAME{Init, Reset, Update, Process};
+ProcessorDsp DSP_EXPORT_NAME{Init, Reset, Update, Process, DSP_INST_NAME};
 } // namespace warpcore

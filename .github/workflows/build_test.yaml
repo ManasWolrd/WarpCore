@@ -138,18 +138,7 @@ jobs:
     - name: Run Pluginval Validation
       shell: bash
       run: |
-        TEST_TARGET=""
-        if [ "${{ runner.os }}" == "macOS" ]; then
-          TEST_TARGET="${{ env.AU_PATH }}"
-        else
-          TEST_TARGET="${{ env.VST3_PATH }}"
-        fi
-
-        if [ -z "$TEST_TARGET" ]; then
-          echo "Error: No plugin binary found to test!"
-          exit 1
-        fi
-
+        TEST_TARGET="${{ env.VST3_PATH }}"
         ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
       env:
         STRICTNESS_LEVEL: 5
@@ -159,14 +148,21 @@ jobs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
+        USER_COMPONENTS_DIR="$HOME/Library/Audio/Plug-Ins/Components"
+        mkdir -p "$USER_COMPONENTS_DIR"
+
         AU_FILE_NAME=$(basename "${{ env.AU_PATH }}")
+        echo "Copying $AU_FILE_NAME to $USER_COMPONENTS_DIR"
+        cp -R "${{ env.AU_PATH }}" "$USER_COMPONENTS_DIR/"
 
-        sudo mkdir -p "/Library/Audio/Plug-ins/Components"
-        sudo cp -r "${{ env.AU_PATH }}" "/Library/Audio/Plug-ins/Components/"
+        echo "Removing quarantine extended attributes..."
+        xattr -dr com.apple.quarantine "$USER_COMPONENTS_DIR/$AU_FILE_NAME" || true
 
-        sudo killall -9 AudioComponentRegistrar || true
+        echo "Restarting AudioComponentRegistrar..."
+        killall -9 AudioComponentRegistrar || true
+        sleep 2
 
-        ${{ matrix.pluginval-binary }} --verbose --validate "/Library/Audio/Plug-ins/Components/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+        ${{ matrix.pluginval-binary }} --verbose --validate "$USER_COMPONENTS_DIR/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
       env:
         STRICTNESS_LEVEL: 10
         TIMEOUT_MS: 1440000
