@@ -180,7 +180,7 @@ jobs:
 
         echo "Checking if plugin exists at: $USER_COMPONENTS_DIR/$AU_FILE_NAME"
 
-        COUNT=$(/usr/libexec/PlistBuddy -c "Print :AudioComponents" "$PLIST_PATH" | grep "Dict" | wc -l | tr -d ' ')
+        COUNT=$(/usr/libexec/PlistBuddy -c "Print :AudioComponents" "$PLIST_PATH" | grep -E "^    [a-zA-Z]+" | wc -l | xargs)
         echo "Found $COUNT component(s) in bundle."
 
         for (( i=0; i<$COUNT; i++ )); do
