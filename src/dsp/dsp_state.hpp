@@ -97,7 +97,7 @@ struct ProcessorDsp {
     const char* name;
 
     bool IsValid() const noexcept {
-        return init != nullptr && reset != nullptr && update != nullptr && process != nullptr;
+        return init != nullptr;
     }
 };
 

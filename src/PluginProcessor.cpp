@@ -205,6 +205,12 @@ void EmptyAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) 
     param_listener_.MarkAll();
 }
 
+void EmptyAudioProcessor::reset() {
+    if (dsp_processor_.IsValid()) {
+        dsp_processor_.reset(dsp_state_);
+    }
+}
+
 void EmptyAudioProcessor::releaseResources() {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
@@ -244,7 +250,10 @@ void EmptyAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
 
     int const num_samples = buffer.getNumSamples();
     float* left_ptr = buffer.getWritePointer(0);
-    float* right_ptr = buffer.getWritePointer(1);
+    float* right_ptr = nullptr;
+    if (buffer.getNumChannels() == 2) {
+        right_ptr = buffer.getWritePointer(1);
+    }
 
     dsp_processor_.process(dsp_state_,left_ptr, right_ptr, num_samples);
 }
