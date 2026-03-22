@@ -159,21 +159,32 @@ jobs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        if [ ! -d "${{ env.AU_PATH }}" ]; then
-          echo "Error: AU Plugin not found at ${{ env.AU_PATH }}"
-          exit 1
-        fi
-
-        AU_FILE_NAME=$(basename "${{ env.AU_PATH }}")
-
-        USER_COMPONENTS_DIR=~/Library/Audio/Plug-Ins/Components
+        USER_COMPONENTS_DIR="$HOME/Library/Audio/Plug-Ins/Components"
         mkdir -p "$USER_COMPONENTS_DIR"
 
+        AU_FILE_NAME=$(basename "${{ env.AU_PATH }}")
+        echo "Copying $AU_FILE_NAME to $USER_COMPONENTS_DIR"
         cp -R "${{ env.AU_PATH }}" "$USER_COMPONENTS_DIR/"
 
-        killall -9 AudioComponentRegistrar || true
+        echo "===================== 复制结果检测 ====================="
+        if [ -d "$USER_COMPONENTS_DIR/$AU_FILE_NAME" ]; then
+          echo "✅ 文件夹已存在: $USER_COMPONENTS_DIR/$AU_FILE_NAME"
+          echo "--- 文件夹内部结构如下: ---"
+          ls -R "$USER_COMPONENTS_DIR/$AU_FILE_NAME"
+        else
+          echo "❌ 错误: 文件夹复制失败！"
+          exit 1
+        fi
+        echo "========================================================"
 
-        ${{ matrix.pluginval-binary }} --verbose --validate "${{ env.AU_PATH }}" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+        echo "Removing quarantine extended attributes..."
+        xattr -dr com.apple.quarantine "$USER_COMPONENTS_DIR/$AU_FILE_NAME" || true
+
+        echo "Restarting AudioComponentRegistrar..."
+        killall -9 AudioComponentRegistrar || true
+        sleep 2
+
+        ${{ matrix.pluginval-binary }} --verbose --validate "$USER_COMPONENTS_DIR/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
       env:
         STRICTNESS_LEVEL: 10
         TIMEOUT_MS: 1440000
