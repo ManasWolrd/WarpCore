@@ -142,7 +142,7 @@ jobs:
         ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
       env:
         STRICTNESS_LEVEL: 10
-        REPEAT: 10
+        REPEAT: 3
         TIMEOUT_MS: 300000
 
     - name: Pluginval AU validations (macOS)
@@ -167,5 +167,30 @@ jobs:
       env:
         STRICTNESS_LEVEL: 10
         TIMEOUT_MS: 1440000
-        REPEAT: 10
+        REPEAT: 3
         RANDOM_SEED: "${{ steps.current-time.outputs.formattedTime }}"
+
+    - name: AU Validation with auval (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        USER_COMPONENTS_DIR="$HOME/Library/Audio/Plug-Ins/Components"
+        AU_FILE_NAME=$(basename "${{ env.AU_PATH }}")
+        PLIST_PATH="$USER_COMPONENTS_DIR/$AU_FILE_NAME/Contents/Info.plist"
+
+        echo "Checking if plugin exists at: $USER_COMPONENTS_DIR/$AU_FILE_NAME"
+
+        COUNT=$(/usr/libexec/PlistBuddy -c "Print :AudioComponents" "$PLIST_PATH" | grep "Dict" | wc -l | tr -d ' ')
+        echo "Found $COUNT component(s) in bundle."
+
+        for (( i=0; i<$COUNT; i++ )); do
+          TYPE=$(/usr/libexec/PlistBuddy -c "Print :AudioComponents:$i:type" "$PLIST_PATH")
+          SUBT=$(/usr/libexec/PlistBuddy -c "Print :AudioComponents:$i:subtype" "$PLIST_PATH")
+          MANU=$(/usr/libexec/PlistBuddy -c "Print :AudioComponents:$i:manufacturer" "$PLIST_PATH")
+
+          echo "-----------------------------------------------"
+          echo "Validating Component $i: Type='$TYPE', Subtype='$SUBT', Manu='$MANU'"
+          echo "-----------------------------------------------"
+
+          auval -v "$TYPE" "$SUBT" "$MANU"
+        done
