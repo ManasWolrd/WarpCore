@@ -141,7 +141,8 @@ jobs:
         TEST_TARGET="${{ env.VST3_PATH }}"
         ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
       env:
-        STRICTNESS_LEVEL: 5
+        STRICTNESS_LEVEL: 10
+        REPEAT: 10
         TIMEOUT_MS: 300000
 
     - name: Pluginval AU validations (macOS)
@@ -166,5 +167,5 @@ jobs:
       env:
         STRICTNESS_LEVEL: 10
         TIMEOUT_MS: 1440000
-        REPEAT: 2
+        REPEAT: 10
         RANDOM_SEED: "${{ steps.current-time.outputs.formattedTime }}"
