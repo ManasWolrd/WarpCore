@@ -8,9 +8,9 @@ struct EmptyAudioProcessorEditor::PluginConfig {
         options.applicationName = JucePlugin_Name;
         options.filenameSuffix = ".settings";
 #if defined(JUCE_LINUX) || defined(JUCE_BSD)
-        options.folderName = "~/.config/" juceJucePlugin_Name;
+        options.folderName = "~/.config/" JucePlugin_Name;
 #elif defined(JUCE_MAC) || defined(JUCE_IOS)
-        options.folderName = juceJucePlugin_Name;
+        options.folderName = JucePlugin_Name;
 #endif
         options.osxLibrarySubFolder = "Application Support";
         options.storageFormat = juce::PropertiesFile::storeAsXML;
