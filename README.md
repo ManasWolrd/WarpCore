@@ -20,6 +20,11 @@ If you want to know how to reverse the spectrum, here are the resources I referr
 
 ## 功能(Features)
 
+动态 SIMD 调度以充分利用您的现代 CPU。  
+dynamic simd dispatch to fully use your modern cpu.  
+零延迟，只有来自巴特沃斯滤波器的非线性相位。  
+zero latency with some nonlinear phase from butterworth filter.  
+
 - [x] 可配置极点数滤波器  
   Configurable filter pole count.
 
@@ -43,6 +48,9 @@ If you want to know how to reverse the spectrum, here are the resources I referr
 
   应该是加在输出的振荡器上面。  
   This should be applied on the output oscillator stage.
+
+- [ ] 参数平滑  
+  parameter smooth.
 
 ## 图形界面(GUI)
 
