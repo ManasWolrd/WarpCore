@@ -633,16 +633,13 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
     }
     fhigh = std::min(fhigh, state.fs / 2);
 
-    if (state.pitch_affect && p.pitch_shift < 0.0f) {
-        // formant anti-alasing
-        fhigh /= fshit;
-    }
-
     float f_first_band_stop = fhigh / static_cast<float>(p.bands);
     float f_first_band_center = f_first_band_stop / 2;
 
-    if (!state.pitch_affect && p.pitch_shift > 0.0f) {
-        // pitch anti-alasing
+    bool pitch_alas = !state.pitch_affect && p.pitch_shift > 0.0f;
+    bool formant_alas = state.pitch_affect && p.pitch_shift < 0.0f;
+
+    if (pitch_alas || formant_alas) {
         f_first_band_stop *= fshit;
         state.num_warps = static_cast<int>(fhigh / f_first_band_stop);
         state.num_warps = std::max(state.num_warps, 1);

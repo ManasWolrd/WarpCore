@@ -68,5 +68,5 @@ void PluginUi::resized() {
 }
 
 void PluginUi::paint(juce::Graphics& g) {
-    
+    juce::ignoreUnused(g);
 }

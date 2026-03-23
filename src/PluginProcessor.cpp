@@ -18,7 +18,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterInt>(
             juce::ParameterID{"warp", 1},
             "warp",
-            1, global::kMaxBands, 128
+            1, global::kMaxBands, 50
         );
         param_listener_.Add(p, [this](int v) {
             param_.bands = v;
@@ -116,7 +116,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
                 "music: 0 + 2n",
                 "music: 1 + 2n",
             },
-            3
+            2
         );
         param_listener_.Add(p, [this](int v) {
             param_.freq_distribution = static_cast<warpcore::FreqDistrbution>(v);
@@ -197,6 +197,8 @@ void EmptyAudioProcessor::changeProgramName(int index, const juce::String& newNa
 
 //==============================================================================
 void EmptyAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+    juce::ignoreUnused(samplesPerBlock);
+
     float fs = static_cast<float>(sampleRate);
     if (dsp_processor_.IsValid()) {
         dsp_processor_.init(dsp_state_, fs);
@@ -239,6 +241,8 @@ bool EmptyAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) con
 }
 
 void EmptyAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
+    juce::ignoreUnused(midiMessages);
+
     if (!dsp_processor_.IsValid()) return;
 
     juce::ScopedNoDenormals noDenormals;
