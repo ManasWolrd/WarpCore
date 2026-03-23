@@ -4,10 +4,15 @@
 
 struct EmptyAudioProcessorEditor::PluginConfig {
     PluginConfig() {
-        juce::PropertiesFile::Options options;
+        juce::PropertiesFile::Options options{};
         options.applicationName = JucePlugin_Name;
         options.filenameSuffix = ".settings";
-        options.folderName = JucePlugin_Manufacturer;
+#if defined(JUCE_LINUX) || defined(JUCE_BSD)
+        options.folderName = "~/.config/" juceJucePlugin_Name;
+#elif defined(JUCE_MAC) || defined(JUCE_IOS)
+        options.folderName = juceJucePlugin_Name;
+#endif
+        options.osxLibrarySubFolder = "Application Support";
         options.storageFormat = juce::PropertiesFile::storeAsXML;
 
         config = std::make_unique<juce::PropertiesFile>(options);
@@ -33,7 +38,8 @@ EmptyAudioProcessorEditor::EmptyAudioProcessorEditor(EmptyAudioProcessor& p)
     auto* props = plugin_config_->config.get();
     if (props != nullptr) {
         scale_ = static_cast<float>(props->getDoubleValue("scale", scale_));
-        setSize(static_cast<int>(static_cast<float>(ui_width_) * scale_), static_cast<int>(static_cast<float>(ui_height_) * scale_));
+        setSize(static_cast<int>(static_cast<float>(ui_width_) * scale_),
+                static_cast<int>(static_cast<float>(ui_height_) * scale_));
     }
     else {
         setSize(ui_width_, ui_height_);
@@ -47,7 +53,8 @@ EmptyAudioProcessorEditor::EmptyAudioProcessorEditor(EmptyAudioProcessor& p)
         ui_height_ = height;
         ui_.setSize(width, height);
         getConstrainer()->setFixedAspectRatio(static_cast<float>(ui_width_) / static_cast<float>(ui_height_));
-        setSize(static_cast<int>(static_cast<float>(width) * scale_), static_cast<int>(static_cast<float>(height) * scale_));
+        setSize(static_cast<int>(static_cast<float>(width) * scale_),
+                static_cast<int>(static_cast<float>(height) * scale_));
     };
     addAndMakeVisible(ui_);
 
