@@ -16,8 +16,7 @@ struct ComplexPhase {
     simd::Float128 band_gain;
 };
 template <FreqDistrbution kFreqMode>
-static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::complex<float> post_osc_f32,
-                                     float band0_wet_mix) {
+static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::complex<float> post_osc_f32) {
     ComplexPhase r;
 
     const auto pre_osc_f32_0 = std::complex{1.0f, 0.0f};
@@ -59,7 +58,7 @@ static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::compl
             .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag()},
         };
 
-        r.band_gain = simd::Float128{band0_wet_mix, 2.0f, 2.0f, 2.0f};
+        r.band_gain = simd::Float128{1.0f, 2.0f, 2.0f, 2.0f};
     }
     else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
         r.pre_osc = simd::Complex128{
@@ -80,7 +79,7 @@ static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::compl
             .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag()},
         };
 
-        r.band_gain = simd::Float128{band0_wet_mix, 1.0f, 1.0f, 1.0f} * 2.0f;
+        r.band_gain = simd::Float128{1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
     }
     else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
         r.pre_osc = simd::Complex128{
@@ -101,7 +100,7 @@ static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::compl
             .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag()},
         };
 
-        r.band_gain = simd::Float128{band0_wet_mix, 2.0f, 2.0f, 2.0f};
+        r.band_gain = simd::Float128{1.0f, 2.0f, 2.0f, 2.0f};
     }
     else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
         r.pre_osc = simd::Complex128{
@@ -122,7 +121,7 @@ static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::compl
             .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag()},
         };
 
-        r.band_gain = simd::Float128{band0_wet_mix, 1.0f, 1.0f, 1.0f} * 2.0f;
+        r.band_gain = simd::Float128{1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
     }
 
     return r;
@@ -139,12 +138,17 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
     };
     simd::Float128 tail_gain = kBandGainLut[state.num_warps & 3] * 2.0f;
 
-    float band0_dry_mix = state.base_mix * 2.0f;
-    float band0_wet_mix = 1.0f - state.base_mix;
+    constexpr float half_pi = std::numbers::pi_v<float> / 2.0f;
+    float target_wet = std::sin(state.drywet * half_pi);
+    float target_dry = std::cos(state.drywet * half_pi);
+    float inv_samples = 1.0f / static_cast<float>(num_samples);
+    float delta_wet = (target_wet - state.last_wet_) * inv_samples;
+    float delta_dry = (target_dry - state.last_dry_) * inv_samples;
+    float wet_mix = state.last_wet_;
+    float dry_mix = state.last_dry_;
     int simd_loop_count = (state.num_warps + 3) / 4;
 
     if (state.num_warps <= 4) {
-        tail_gain[0] = band0_wet_mix;
         if (kFreqMode == FreqDistrbution::k1_2n || kFreqMode == FreqDistrbution::k1_n) {
             tail_gain[0] *= 2.0f;
         }
@@ -184,46 +188,15 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         simd::Complex128 pre_osc_n_val;
         simd::Complex128 post_osc_n_val;
         simd::Float128 band_gain;
-        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32, band0_wet_mix);
+        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32);
         pre_osc = r.pre_osc;
         post_osc = r.post_osc;
         pre_osc_n_val = r.pre_osc_n_val;
         post_osc_n_val = r.post_osc_n_val;
         band_gain = r.band_gain;
 
-        // -------------------- process first band --------------------
         float x_left = left[i];
         float x_right = right[i];
-
-        std::complex<float> cpx_x_left = x_left * pre_osc_f32;
-        std::complex<float> cpx_x_right = x_right * pre_osc_f32;
-        for (int k = 0; k < kPoles; ++k) {
-            const float gk = svf_g[k];
-            const float dk = svf_d[k];
-            auto& s1_l = state.band0_s1[2 * k];
-            auto& s1_r = state.band0_s1[2 * k + 1];
-            auto& s2_l = state.band0_s2[2 * k];
-            auto& s2_r = state.band0_s2[2 * k + 1];
-
-            auto bp_l = dk * (gk * (cpx_x_left - s2_l) + s1_l);
-            auto bp_r = dk * (gk * (cpx_x_right - s2_r) + s1_r);
-            auto v1_l = bp_l - s1_l;
-            auto v1_r = bp_r - s1_r;
-            auto v2_l = gk * bp_l;
-            auto v2_r = gk * bp_r;
-            auto lp_l = v2_l + s2_l;
-            auto lp_r = v2_r + s2_r;
-
-            s1_l = bp_l + v1_l;
-            s1_r = bp_r + v1_r;
-            s2_l = lp_l + v2_l;
-            s2_r = lp_r + v2_r;
-            cpx_x_left = lp_l;
-            cpx_x_right = lp_r;
-        }
-        float first_band_y_l = (cpx_x_left * std::conj(post_osc_f32)).real() * band0_dry_mix;
-        float first_band_y_r = (cpx_x_right * std::conj(post_osc_f32)).real() * band0_dry_mix;
-
         // -------------------- process bands --------------------
         auto* svf_state = state.svf128.state.data();
         simd::Float128 y_l{};
@@ -358,9 +331,15 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         y_l += band_out_l.re * tail_gain;
         y_r += band_out_r.re * tail_gain;
 
-        left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
-        right[i] = simd::ReduceAdd(y_r) + first_band_y_r;
+        float wet_out_l = simd::ReduceAdd(y_l);
+        float wet_out_r = simd::ReduceAdd(y_r);
+        left[i] = wet_out_l * wet_mix + dry_mix * left[i];
+        right[i] = wet_out_r * wet_mix + dry_mix * right[i];
+        wet_mix += delta_wet;
+        dry_mix += delta_dry;
     }
+    state.last_dry_ = target_dry;
+    state.last_wet_ = target_wet;
 }
 
 template <FreqDistrbution kFreqMode, int kPoles, bool kSmooth>
@@ -373,12 +352,18 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
     };
     simd::Float128 tail_gain = kBandGainLut[state.num_warps & 3] * 2.0f;
 
-    float band0_dry_mix = state.base_mix * 2.0f;
-    float band0_wet_mix = 1.0f - state.base_mix;
+    constexpr float half_pi = std::numbers::pi_v<float> / 2.0f;
+    float target_wet = std::sin(state.drywet * half_pi);
+    float target_dry = std::cos(state.drywet * half_pi);
+    float inv_samples = 1.0f / static_cast<float>(num_samples);
+    float delta_wet = (target_wet - state.last_wet_) * inv_samples;
+    float delta_dry = (target_dry - state.last_dry_) * inv_samples;
+    float wet_mix = state.last_wet_;
+    float dry_mix = state.last_dry_;
+
     int simd_loop_count = (state.num_warps + 3) / 4;
 
     if (state.num_warps <= 4) {
-        tail_gain[0] = band0_wet_mix;
         if (kFreqMode == FreqDistrbution::k1_2n || kFreqMode == FreqDistrbution::k1_n) {
             tail_gain[0] *= 2.0f;
         }
@@ -418,34 +403,14 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         simd::Complex128 pre_osc_n_val;
         simd::Complex128 post_osc_n_val;
         simd::Float128 band_gain;
-        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32, band0_wet_mix);
+        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32);
         pre_osc = r.pre_osc;
         post_osc = r.post_osc;
         pre_osc_n_val = r.pre_osc_n_val;
         post_osc_n_val = r.post_osc_n_val;
         band_gain = r.band_gain;
 
-        // -------------------- process first band --------------------
         float x_left = left[i];
-
-        std::complex<float> cpx_x_left = x_left * pre_osc_f32;
-        for (int k = 0; k < kPoles; ++k) {
-            const float gk = svf_g[k];
-            const float dk = svf_d[k];
-            auto& s1_l = state.band0_s1[2 * k];
-            auto& s2_l = state.band0_s2[2 * k];
-
-            auto bp_l = dk * (gk * (cpx_x_left - s2_l) + s1_l);
-            auto v1_l = bp_l - s1_l;
-            auto v2_l = gk * bp_l;
-            auto lp_l = v2_l + s2_l;
-
-            s1_l = bp_l + v1_l;
-            s2_l = lp_l + v2_l;
-            cpx_x_left = lp_l;
-        }
-        float first_band_y_l = (cpx_x_left * std::conj(post_osc_f32)).real() * band0_dry_mix;
-
         // -------------------- process bands --------------------
         auto* svf_state = state.svf128.state.data();
         simd::Float128 y_l{};
@@ -533,8 +498,13 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         auto band_out_l = tmp_l * post_osc_n_val;
         y_l += band_out_l.re * tail_gain;
 
-        left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
+        float wet_out = simd::ReduceAdd(y_l);
+        left[i] = wet_out * wet_mix + dry_mix * left[i];
+        wet_mix += delta_wet;
+        dry_mix += delta_dry;
     }
+    state.last_dry_ = target_dry;
+    state.last_wet_ = target_wet;
 }
 
 template <FreqDistrbution kFreqMode, int kPoles, bool kSmooth>
@@ -594,15 +564,12 @@ static void Reset(warpcore::ProcessorState& state) noexcept {
     state.svf128.Reset();
     state.pre_osc_phase = 0.0f;
     state.post_osc_phase = 0.0f;
-
-    std::fill_n(state.band0_s1, global::kMaxPoles * 2, std::complex<float>{});
-    std::fill_n(state.band0_s2, global::kMaxPoles * 2, std::complex<float>{});
     state.StopSmooth();
 }
 
 static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) noexcept {
     state.num_warps = p.bands;
-    state.base_mix = p.base_mix;
+    state.drywet = p.drywet;
     state.pitch_affect = p.pitch_affect;
     state.freq_distribution = p.freq_distribution;
 

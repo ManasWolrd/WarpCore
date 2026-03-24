@@ -24,9 +24,8 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     poles_.slider.setTooltip("Set the filter's poles");
     addAndMakeVisible(poles_);
 
-    base_mix_.BindParam(apvt, "base_mix");
-    base_mix_.slider.setTooltip("Set the band0's warp behavior.\nThis value is used to hear the pitch in low warp value.\n0 = warp, 1 = no warp(almost)\n*if you are using 0 + xn freq mode, set this to 0 will get better quality.");
-    addAndMakeVisible(base_mix_);
+    drywet_.BindParam(apvt, "drywet");
+    addAndMakeVisible(drywet_);
 
     pitch_.BindParam(apvt, "pitch");
     pitch_.slider.setTooltip("Set the warped signal's pitch.\nThis is used to simulate PiWarp's pitch parameter");
@@ -57,7 +56,7 @@ void PluginUi::resized() {
     f_low_.setBounds(line.removeFromLeft(80));
     poles_.setBounds(line.removeFromLeft(80));
     pitch_.setBounds(line.removeFromLeft(80));
-    base_mix_.setBounds(line.removeFromLeft(80));
+    drywet_.setBounds(line.removeFromLeft(80));
 
     auto top_left_b = b.removeFromLeft(pitch_.getBounds().getX());
     pitch_affect_.setBounds(b.withWidth(pitch_.getWidth()).reduced(2));

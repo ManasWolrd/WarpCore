@@ -28,7 +28,7 @@ private:
     ui::Dial f_high_{"Freq High"};
     ui::Dial poles_{"Poles"};
     ui::Dial pitch_{"Pitch"};
-    ui::Dial base_mix_{"Base Mix"};
+    ui::Dial drywet_{"DryWet"};
 
     juce::Label pitch_affect_label{"", "Formant Mode"};
     ui::Switch pitch_affect_{"Formant", "Pitch"};

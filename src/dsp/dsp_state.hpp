@@ -48,7 +48,7 @@ struct ProcessorState {
     float fs{};
     int num_warps{};
     int poles{};
-    float base_mix{};
+    float drywet{};
     bool pitch_affect{};
     FreqDistrbution freq_distribution{};
 
@@ -65,6 +65,8 @@ struct ProcessorState {
     float post_osc_phase_inc_inc_{};
     float last_pre_osc_phase_inc_{};
     float last_post_osc_phase_inc_{};
+    float last_dry_{};
+    float last_wet_{};
 
     // complex sine generator
     float pre_osc_phase{};
@@ -76,10 +78,6 @@ struct ProcessorState {
     float analog_fmul{};
     SvfLaneN<simd::Float128> svf128;
     SvfLaneN<simd::Float256> svf256;
-
-    std::complex<float> band0_s1[global::kMaxPoles * 2]{};
-    std::complex<float> band0_s2[global::kMaxPoles * 2]{};
-
     
     void SetFreq(float w_lowpass, int num_filters) noexcept {
         constexpr float atten = 0.5f;
@@ -128,7 +126,7 @@ struct Param {
     float filter_scale;
     int filter_order;
     float pitch_shift;
-    float base_mix;
+    float drywet;
     bool pitch_affect;
     FreqDistrbution freq_distribution;
 };
