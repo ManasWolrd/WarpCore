@@ -12,14 +12,14 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         simd::Float128{1.0f, 1.0f, 0.0f, 0.0f},
         simd::Float128{1.0f, 1.0f, 1.0f, 0.0f},
     };
-    simd::Float128 tail_gain = kBandGainLut[state.num_warps & 3];
+    simd::Float128 tail_gain = kBandGainLut[state.num_warps & 3] * 2.0f;
 
-    float band0_dry_mix = state.base_mix;
-    float band0_wet_mix = 1.0f - band0_dry_mix;
+    float band0_dry_mix = state.base_mix * 2.0f;
+    float band0_wet_mix = 1.0f - state.base_mix;
     int simd_loop_count = (state.num_warps + 3) / 4;
 
     if (state.num_warps <= 4) {
-        tail_gain[0] = band0_wet_mix;
+        tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
     for (int i = 0; i < num_samples; i++) {
@@ -61,6 +61,7 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         simd::Complex128 post_osc;
         simd::Complex128 pre_osc_n_val;
         simd::Complex128 post_osc_n_val;
+        simd::Float128 band_gain;
 
         if constexpr (kFreqMode == FreqDistrbution::k0_n) {
             pre_osc = simd::Complex128{
@@ -80,6 +81,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real()},
                 .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
             pre_osc = simd::Complex128{
@@ -99,6 +102,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .re = {post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(), post_osc_f32_4.real()},
                 .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag()},
             };
+
+            band_gain = simd::Float128{band0_wet_mix, 1.0f, 1.0f, 1.0f} * 2.0f;
         }
         else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
             pre_osc = simd::Complex128{
@@ -118,6 +123,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .re = {post_osc_f32_0.real(), post_osc_f32_2.real(), post_osc_f32_4.real(), post_osc_f32_6.real()},
                 .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
             pre_osc = simd::Complex128{
@@ -137,6 +144,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real()},
                 .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag()},
             };
+
+            band_gain = simd::Float128{band0_wet_mix, 1.0f, 1.0f, 1.0f} * 2.0f;
         }
 
         // -------------------- process first band --------------------
@@ -174,7 +183,6 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
 
         // -------------------- process bands --------------------
         auto* svf_state = state.svf128.state.data();
-        simd::Float128 band_gain{band0_wet_mix, 1.0f, 1.0f, 1.0f};
 
         for (int j = 0; j < simd_loop_count - 1; ++j) {
             // std::complex<float> tmp = x * pre_osc_n_val;
@@ -240,7 +248,7 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
             y_r += simd::ReduceAdd(band_out_r.re * band_gain);
             post_osc_n_val *= post_osc;
 
-            band_gain = simd::BroadcastF128(1.0f);
+            band_gain = simd::BroadcastF128(2.0f);
         }
 
         // -------------------- here we have: 1/2/3/4 --------------------
@@ -318,14 +326,14 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         simd::Float128{1.0f, 1.0f, 0.0f, 0.0f},
         simd::Float128{1.0f, 1.0f, 1.0f, 0.0f},
     };
-    simd::Float128 tail_gain = kBandGainLut[state.num_warps & 3];
+    simd::Float128 tail_gain = kBandGainLut[state.num_warps & 3] * 2.0f;
 
-    float band0_dry_mix = state.base_mix;
-    float band0_wet_mix = 1.0f - band0_dry_mix;
+    float band0_dry_mix = state.base_mix * 2.0f;
+    float band0_wet_mix = 1.0f - state.base_mix;
     int simd_loop_count = (state.num_warps + 3) / 4;
 
     if (state.num_warps <= 4) {
-        tail_gain[0] = band0_wet_mix;
+        tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
     for (int i = 0; i < num_samples; i++) {
@@ -367,6 +375,7 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         simd::Complex128 post_osc;
         simd::Complex128 pre_osc_n_val;
         simd::Complex128 post_osc_n_val;
+        simd::Float128 band_gain;
 
         if constexpr (kFreqMode == FreqDistrbution::k0_n) {
             pre_osc = simd::Complex128{
@@ -386,6 +395,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real()},
                 .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
             pre_osc = simd::Complex128{
@@ -405,6 +416,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .re = {post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(), post_osc_f32_4.real()},
                 .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag()},
             };
+
+            band_gain = simd::Float128{band0_wet_mix, 1.0f, 1.0f, 1.0f} * 2.0f;
         }
         else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
             pre_osc = simd::Complex128{
@@ -424,6 +437,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .re = {post_osc_f32_0.real(), post_osc_f32_2.real(), post_osc_f32_4.real(), post_osc_f32_6.real()},
                 .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
             pre_osc = simd::Complex128{
@@ -443,6 +458,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real()},
                 .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag()},
             };
+
+            band_gain = simd::Float128{band0_wet_mix, 1.0f, 1.0f, 1.0f} * 2.0f;
         }
 
         // -------------------- process first band --------------------
@@ -468,7 +485,6 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
 
         // -------------------- process bands --------------------
         auto* svf_state = state.svf128.state.data();
-        simd::Float128 band_gain{band0_wet_mix, 1.0f, 1.0f, 1.0f};
 
         for (int j = 0; j < simd_loop_count - 1; ++j) {
             // std::complex<float> tmp = x * pre_osc_n_val;
@@ -511,7 +527,7 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
             y_l += simd::ReduceAdd(band_out_l.re * band_gain);
             post_osc_n_val *= post_osc;
 
-            band_gain = simd::BroadcastF128(1.0f);
+            band_gain = simd::BroadcastF128(2.0f);
         }
 
         // -------------------- here we have: 1/2/3/4 --------------------

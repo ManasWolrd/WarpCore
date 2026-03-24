@@ -16,14 +16,14 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f},
     };
-    simd::Float256 tail_gain = kBandGainLut[state.num_warps & 7];
+    simd::Float256 tail_gain = kBandGainLut[state.num_warps & 7] * 2.0f;
 
-    float band0_dry_mix = state.base_mix;
-    float band0_wet_mix = 1.0f - band0_dry_mix;
+    float band0_dry_mix = state.base_mix * 2.0f;
+    float band0_wet_mix = 1.0f - state.base_mix;
     int simd_loop_count = (state.num_warps + 7) / 8;
 
     if (state.num_warps <= 8) {
-        tail_gain[0] = band0_wet_mix;
+        tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
     for (int i = 0; i < num_samples; i++) {
@@ -81,6 +81,7 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         simd::Complex256 post_osc;
         simd::Complex256 pre_osc_n_val;
         simd::Complex256 post_osc_n_val;
+        simd::Float256 band_gain;
 
         if constexpr (kFreqMode == FreqDistrbution::k0_n) {
             pre_osc = simd::Complex256{
@@ -104,6 +105,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
                        post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
             pre_osc = simd::Complex256{
@@ -127,6 +130,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag(),
                        post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag(), post_osc_f32_8.imag()},
             };
+
+            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
         }
         else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
             pre_osc = simd::Complex256{
@@ -150,6 +155,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag(),
                        post_osc_f32_8.imag(), post_osc_f32_10.imag(), post_osc_f32_12.imag(), post_osc_f32_14.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
             pre_osc = simd::Complex256{
@@ -173,6 +180,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
                 .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
                        post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
             };
+
+            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f; 
         }
 
         // -------------------- process first band --------------------
@@ -210,7 +219,6 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
 
         // -------------------- process bands --------------------
         auto* svf_state = state.svf256.state.data();
-        simd::Float256 band_gain{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 
         for (int j = 0; j < simd_loop_count - 1; ++j) {
             // std::complex<float> tmp = x * pre_osc_n_val;
@@ -276,7 +284,7 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
             y_r += simd::ReduceAdd(band_out_r.re * band_gain);
             post_osc_n_val *= post_osc;
 
-            band_gain = simd::BroadcastF256(1.0f);
+            band_gain = simd::BroadcastF256(2.0f);
         }
 
         // -------------------- here we have: 1/2/3/4/5/6/7/8 --------------------
@@ -358,14 +366,14 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f},
     };
-    simd::Float256 tail_gain = kBandGainLut[state.num_warps & 7];
+    simd::Float256 tail_gain = kBandGainLut[state.num_warps & 7] * 2.0f;
 
-    float band0_dry_mix = state.base_mix;
-    float band0_wet_mix = 1.0f - band0_dry_mix;
+    float band0_dry_mix = state.base_mix * 2.0f;
+    float band0_wet_mix = 1.0f - state.base_mix;
     int simd_loop_count = (state.num_warps + 7) / 8;
 
     if (state.num_warps <= 8) {
-        tail_gain[0] = band0_wet_mix;
+        tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
     for (int i = 0; i < num_samples; i++) {
@@ -423,6 +431,7 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         simd::Complex256 post_osc;
         simd::Complex256 pre_osc_n_val;
         simd::Complex256 post_osc_n_val;
+        simd::Float256 band_gain;
 
         if constexpr (kFreqMode == FreqDistrbution::k0_n) {
             pre_osc = simd::Complex256{
@@ -446,6 +455,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
                        post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
             pre_osc = simd::Complex256{
@@ -469,6 +480,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag(),
                        post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag(), post_osc_f32_8.imag()},
             };
+
+            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
         }
         else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
             pre_osc = simd::Complex256{
@@ -492,6 +505,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag(),
                        post_osc_f32_8.imag(), post_osc_f32_10.imag(), post_osc_f32_12.imag(), post_osc_f32_14.imag()},
             };
+
+            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
         }
         else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
             pre_osc = simd::Complex256{
@@ -515,6 +530,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
                 .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
                        post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
             };
+
+            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f; 
         }
 
         // -------------------- process first band --------------------
@@ -540,7 +557,6 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
 
         // -------------------- process bands --------------------
         auto* svf_state = state.svf256.state.data();
-        simd::Float256 band_gain{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 
         for (int j = 0; j < simd_loop_count - 1; ++j) {
             // std::complex<float> tmp = x * pre_osc_n_val;
@@ -583,7 +599,7 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
             y_l += simd::ReduceAdd(band_out_l.re * band_gain);
             post_osc_n_val *= post_osc;
 
-            band_gain = simd::BroadcastF256(1.0f);
+            band_gain = simd::BroadcastF256(2.0f);
         }
 
         // -------------------- here we have: 1/2/3/4/5/6/7/8 --------------------

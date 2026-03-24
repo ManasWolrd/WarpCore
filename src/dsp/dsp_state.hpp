@@ -26,20 +26,24 @@ struct SvfLaneN {
         state.fill(SvfState{});
     }
 
-    void SetPole(int pole_idx, float w, float Q) noexcept {
+    void SetPole(int pole_idx, float w, float Q, float fmul) noexcept {
         float r2 = 1.0f / Q;
-        float g_val = std::tan(w / 2.0f);
+        float g_val = std::tan(w / 2.0f) * fmul;
         g[pole_idx] = g_val;
         d[pole_idx] = 1.0f / (1.0f + r2 * g_val + g_val * g_val);
     }
 
     void SetFreq(float w_lowpass, int num_filters) noexcept {
+        constexpr float atten = 0.5f;
+        constexpr float square_epsi = (1.0f - atten * atten) / atten;
+        float analog_fmul = 1.0f / std::pow(square_epsi, 0.25f / static_cast<float>(num_filters));
+
         int n = 2 * num_filters;
         for (int k = 1; k <= num_filters; ++k) {
             float phi =
                 (2.0f * static_cast<float>(k) - 1.0f) * std::numbers::pi_v<float> / (2.0f * static_cast<float>(n));
             float Q = 1.0f / (2.0f * std::sin(phi));
-            SetPole(k - 1, w_lowpass, Q);
+            SetPole(k - 1, w_lowpass, Q, analog_fmul);
         }
     }
 };
