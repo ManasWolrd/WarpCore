@@ -128,7 +128,7 @@ static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::compl
     return r;
 }
 
-template <FreqDistrbution kFreqMode, int kPoles>
+template <FreqDistrbution kFreqMode, int kPoles, bool kSmooth>
 static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left, float* right,
                                    int num_samples) noexcept {
     constexpr simd::Array128<simd::Float128, 4> kBandGainLut{
@@ -147,23 +147,26 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
-    float inv_samples = 1.0f / static_cast<float>(num_samples);
-    float pre_osc_phase_inc = state.last_pre_osc_phase_inc;
-    float delta_pre_osc_phase_inc = (state.pre_osc_phase_inc - pre_osc_phase_inc) * inv_samples;
-    float post_osc_phase_inc = state.last_post_osc_phase_inc;
-    float delta_post_osc_phase_inc = (state.post_osc_phase_inc - post_osc_phase_inc) * inv_samples;
-
-    const auto svf_g = state.svf128.g;
-    const auto svf_d = state.svf128.d;
-
     for (int i = 0; i < num_samples; i++) {
+        if constexpr (kSmooth) {
+            for (int j = 0; j < kPoles; ++j) {
+                state.svf128.SetPole(j, state.last_w_[j], state.last_q_[j], state.analog_fmul);
+            }
+            for (int j = 0; j < kPoles; ++j) {
+                state.last_w_[j] += state.w_inc_[j];
+                state.last_q_[j] += state.q_inc_[j];
+            }
+            state.last_pre_osc_phase_inc_ += state.pre_osc_phase_inc_inc_;
+            state.last_post_osc_phase_inc_ += state.post_osc_phase_inc_inc_;
+        }
+        const auto& svf_g = state.svf128.g;
+        const auto& svf_d = state.svf128.d;
+
         // -------------------- tick complex sine generators --------------------
-        state.pre_osc_phase += pre_osc_phase_inc;
-        pre_osc_phase_inc += delta_pre_osc_phase_inc;
+        state.pre_osc_phase += state.last_pre_osc_phase_inc_;
         state.pre_osc_phase -= std::floor(state.pre_osc_phase);
 
-        state.post_osc_phase += post_osc_phase_inc;
-        post_osc_phase_inc += delta_post_osc_phase_inc;
+        state.post_osc_phase += state.last_post_osc_phase_inc_;
         state.post_osc_phase -= std::floor(state.post_osc_phase);
 
         // e^jwt
@@ -356,11 +359,9 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         right[i] = simd::ReduceAdd(y_r) + first_band_y_r;
     }
 
-    state.last_pre_osc_phase_inc = state.pre_osc_phase_inc;
-    state.last_post_osc_phase_inc = state.post_osc_phase_inc;
 }
 
-template <FreqDistrbution kFreqMode, int kPoles>
+template <FreqDistrbution kFreqMode, int kPoles, bool kSmooth>
 static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, int num_samples) noexcept {
     constexpr simd::Array128<simd::Float128, 4> kBandGainLut{
         simd::Float128{1.0f, 1.0f, 1.0f, 1.0f},
@@ -378,23 +379,26 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
-    float inv_samples = 1.0f / static_cast<float>(num_samples);
-    float pre_osc_phase_inc = state.last_pre_osc_phase_inc;
-    float delta_pre_osc_phase_inc = (state.pre_osc_phase_inc - pre_osc_phase_inc) * inv_samples;
-    float post_osc_phase_inc = state.last_post_osc_phase_inc;
-    float delta_post_osc_phase_inc = (state.post_osc_phase_inc - post_osc_phase_inc) * inv_samples;
-
-    const auto svf_g = state.svf128.g;
-    const auto svf_d = state.svf128.d;
-
     for (int i = 0; i < num_samples; i++) {
+        if constexpr (kSmooth) {
+            for (int j = 0; j < kPoles; ++j) {
+                state.svf128.SetPole(j, state.last_w_[j], state.last_q_[j], state.analog_fmul);
+            }
+            for (int j = 0; j < kPoles; ++j) {
+                state.last_w_[j] += state.w_inc_[j];
+                state.last_q_[j] += state.q_inc_[j];
+            }
+            state.last_pre_osc_phase_inc_ += state.pre_osc_phase_inc_inc_;
+            state.last_post_osc_phase_inc_ += state.post_osc_phase_inc_inc_;
+        }
+        const auto& svf_g = state.svf128.g;
+        const auto& svf_d = state.svf128.d;
+
         // -------------------- tick complex sine generators --------------------
-        state.pre_osc_phase += pre_osc_phase_inc;
-        pre_osc_phase_inc += delta_pre_osc_phase_inc;
+        state.pre_osc_phase += state.last_pre_osc_phase_inc_;
         state.pre_osc_phase -= std::floor(state.pre_osc_phase);
 
-        state.post_osc_phase += post_osc_phase_inc;
-        post_osc_phase_inc += delta_post_osc_phase_inc;
+        state.post_osc_phase += state.last_post_osc_phase_inc_;
         state.post_osc_phase -= std::floor(state.post_osc_phase);
 
         // e^jwt
@@ -526,48 +530,45 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
 
         left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
     }
-
-    state.last_pre_osc_phase_inc = state.pre_osc_phase_inc;
-    state.last_post_osc_phase_inc = state.post_osc_phase_inc;
 }
 
-template <FreqDistrbution kFreqMode, int kPoles>
+template <FreqDistrbution kFreqMode, int kPoles, bool kSmooth>
 static void ProcessInternal(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     if (right == nullptr) {
         // 这可能导致一些cache问题，不过不用重写DspState布局
-        ProcessInternal_Mono<kFreqMode, kPoles>(state, left, num_samples);
+        ProcessInternal_Mono<kFreqMode, kPoles, kSmooth>(state, left, num_samples);
     }
     else {
-        ProcessInternal_Stereo<kFreqMode, kPoles>(state, left, right, num_samples);
+        ProcessInternal_Stereo<kFreqMode, kPoles, kSmooth>(state, left, right, num_samples);
     }
 }
 
-template <FreqDistrbution kFreqMode>
+template <FreqDistrbution kFreqMode, bool kSmooth>
 static void ProcessPoles(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
     switch (state.poles) {
         case 1:
-            ProcessInternal<kFreqMode, 1>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 1, kSmooth>(state, left, right, num_samples);
             break;
         case 2:
-            ProcessInternal<kFreqMode, 2>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 2, kSmooth>(state, left, right, num_samples);
             break;
         case 3:
-            ProcessInternal<kFreqMode, 3>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 3, kSmooth>(state, left, right, num_samples);
             break;
         case 4:
-            ProcessInternal<kFreqMode, 4>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 4, kSmooth>(state, left, right, num_samples);
             break;
         case 5:
-            ProcessInternal<kFreqMode, 5>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 5, kSmooth>(state, left, right, num_samples);
             break;
         case 6:
-            ProcessInternal<kFreqMode, 6>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 6, kSmooth>(state, left, right, num_samples);
             break;
         case 7:
-            ProcessInternal<kFreqMode, 7>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 7, kSmooth>(state, left, right, num_samples);
             break;
         case 8:
-            ProcessInternal<kFreqMode, 8>(state, left, right, num_samples);
+            ProcessInternal<kFreqMode, 8, kSmooth>(state, left, right, num_samples);
             break;
         default:
             assert(false);
@@ -581,7 +582,7 @@ static void ProcessPoles(warpcore::ProcessorState& state, float* left, float* ri
 
 static void Init(warpcore::ProcessorState& state, float fs) noexcept {
     state.fs = fs;
-    state.svf128.Init();
+    state.total_smooth_samples = static_cast<int>(fs * 10.0f / 1000.0f);
 }
 
 static void Reset(warpcore::ProcessorState& state) noexcept {
@@ -589,8 +590,9 @@ static void Reset(warpcore::ProcessorState& state) noexcept {
     state.pre_osc_phase = 0.0f;
     state.post_osc_phase = 0.0f;
 
-    std::fill_n(state.band0_s1, state.svf128.kSvfCoeffSize * 2, std::complex<float>{});
-    std::fill_n(state.band0_s2, state.svf128.kSvfCoeffSize * 2, std::complex<float>{});
+    std::fill_n(state.band0_s1, global::kMaxPoles * 2, std::complex<float>{});
+    std::fill_n(state.band0_s2, global::kMaxPoles * 2, std::complex<float>{});
+    state.StopSmooth();
 }
 
 static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) noexcept {
@@ -646,27 +648,64 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
     float filter_w = wbase * p.filter_scale;
     filter_w = std::min(filter_w, std::numbers::pi_v<float> - 0.1f);
 
-    if (state.poles != p.filter_order) {
-        state.svf128.Reset();
-    }
+    bool stop_smooth = state.poles != p.filter_order;
     state.poles = p.filter_order;
-    state.svf128.SetFreq(filter_w, p.filter_order);
+    state.SetFreq(filter_w, p.filter_order);
+    if (stop_smooth) {
+        state.svf128.Reset();
+        // 调整极点数量立刻赋值给滤波器，跳过所有平滑过程
+        state.StopSmooth();
+        for (int i = 0; i < state.poles; ++i) {
+            state.svf128.SetPole(i, state.w_[i], state.q_[i], state.analog_fmul);
+        }
+    }
+    else {
+        state.smooth_samples = state.total_smooth_samples;
+        state.BeginSmooth();
+    }
+}
+
+template <bool kSmooth>
+static void Process2(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
+    switch (state.freq_distribution) {
+        case FreqDistrbution::k0_n:
+            ProcessPoles<FreqDistrbution::k0_n, kSmooth>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k1_n:
+            ProcessPoles<FreqDistrbution::k1_n, kSmooth>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k0_2n:
+            ProcessPoles<FreqDistrbution::k0_2n, kSmooth>(state, left, right, num_samples);
+            break;
+        case FreqDistrbution::k1_2n:
+            ProcessPoles<FreqDistrbution::k1_2n, kSmooth>(state, left, right, num_samples);
+            break;
+    }
 }
 
 static void Process(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
-    switch (state.freq_distribution) {
-        case FreqDistrbution::k0_n:
-            ProcessPoles<FreqDistrbution::k0_n>(state, left, right, num_samples);
-            break;
-        case FreqDistrbution::k1_n:
-            ProcessPoles<FreqDistrbution::k1_n>(state, left, right, num_samples);
-            break;
-        case FreqDistrbution::k0_2n:
-            ProcessPoles<FreqDistrbution::k0_2n>(state, left, right, num_samples);
-            break;
-        case FreqDistrbution::k1_2n:
-            ProcessPoles<FreqDistrbution::k1_2n>(state, left, right, num_samples);
-            break;
+    while (num_samples != 0) {
+        int blocK_size = num_samples;
+        if (state.smooth_samples != 0) {
+            blocK_size = std::min(blocK_size, state.smooth_samples);
+            state.smooth_samples -= blocK_size;
+            Process2<true>(state, left, right, blocK_size);
+
+            if (state.smooth_samples == 0) {
+                state.StopSmooth();
+                for (int i = 0; i < state.poles; ++i) {
+                    state.svf128.SetPole(i, state.w_[i], state.q_[i], state.analog_fmul);
+                }
+            }
+        }
+        else {
+            Process2<false>(state, left, right, blocK_size);
+        }
+        num_samples -= blocK_size;
+        left += blocK_size;
+        if (right != nullptr) {
+            right += blocK_size;
+        }
     }
 }
 
