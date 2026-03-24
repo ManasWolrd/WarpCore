@@ -144,7 +144,10 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
     int simd_loop_count = (state.num_warps + 3) / 4;
 
     if (state.num_warps <= 4) {
-        tail_gain[0] = band0_wet_mix * 2.0f;
+        tail_gain[0] = band0_wet_mix;
+        if (kFreqMode == FreqDistrbution::k1_2n || kFreqMode == FreqDistrbution::k1_n) {
+            tail_gain[0] *= 2.0f;
+        }
     }
 
     for (int i = 0; i < num_samples; i++) {
@@ -358,7 +361,6 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
         right[i] = simd::ReduceAdd(y_r) + first_band_y_r;
     }
-
 }
 
 template <FreqDistrbution kFreqMode, int kPoles, bool kSmooth>
@@ -376,7 +378,10 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
     int simd_loop_count = (state.num_warps + 3) / 4;
 
     if (state.num_warps <= 4) {
-        tail_gain[0] = band0_wet_mix * 2.0f;
+        tail_gain[0] = band0_wet_mix;
+        if (kFreqMode == FreqDistrbution::k1_2n || kFreqMode == FreqDistrbution::k1_n) {
+            tail_gain[0] *= 2.0f;
+        }
     }
 
     for (int i = 0; i < num_samples; i++) {
