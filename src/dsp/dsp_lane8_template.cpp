@@ -185,8 +185,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
     int simd_loop_count = (state.num_warps + 7) / 8;
 
     if (state.num_warps <= 8) {
-        if (kFreqMode == FreqDistrbution::k1_2n || kFreqMode == FreqDistrbution::k1_n) {
-            tail_gain[0] *= 2.0f;
+        if (kFreqMode == FreqDistrbution::k0_2n || kFreqMode == FreqDistrbution::k0_n) {
+            tail_gain[0] = 1.0f;
         }
     }
 
@@ -403,8 +403,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
     int simd_loop_count = (state.num_warps + 7) / 8;
 
     if (state.num_warps <= 8) {
-        if (kFreqMode == FreqDistrbution::k1_2n || kFreqMode == FreqDistrbution::k1_n) {
-            tail_gain[0] *= 2.0f;
+        if (kFreqMode == FreqDistrbution::k0_2n || kFreqMode == FreqDistrbution::k0_n) {
+            tail_gain[0] = 1.0f;
         }
     }
 
