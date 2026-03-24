@@ -4,11 +4,22 @@
 #include "pluginshared/simd.hpp"
 #include "global.hpp"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 namespace warpcore {
+static consteval int AlignUp(int x, int align) noexcept {
+    return ((x + (align - 1)) / align) * align;
+}
+
 template <simd::IsSimdFloat SimdT>
 struct SvfLaneN {
-    float g[global::kMaxPoles];
-    float d[global::kMaxPoles];
+    static constexpr int kSvfCoeffSize = AlignUp(global::kMaxPoles, simd::LaneSize<SimdT>);
+
+    std::array<float, kSvfCoeffSize> g;
+    std::array<float, kSvfCoeffSize> d;
+    std::array<float, kSvfCoeffSize> last_g;
+    std::array<float, kSvfCoeffSize> last_d;
 
     struct SvfState {
        SimdT s1_re_l;
@@ -21,6 +32,13 @@ struct SvfLaneN {
        SimdT s2_im_r;
     };
     simd::Array256<SvfState, global::kMaxBands * global::kMaxPoles / simd::LaneSize<SimdT>> state;
+
+    void Init() noexcept {
+        g.fill(0.0f);
+        d.fill(0.0f);
+        last_d.fill(0.0f);
+        last_g.fill(0.0f);
+    }
 
     void Reset() noexcept {
         state.fill(SvfState{});
@@ -66,9 +84,11 @@ struct ProcessorState {
     // complex sine generator
     float pre_osc_phase{};
     float pre_osc_phase_inc{};
+    float last_pre_osc_phase_inc{};
 
     float post_osc_phase{};
     float post_osc_phase_inc{};
+    float last_post_osc_phase_inc{};
 
     // complex lowpass filter
     union {
@@ -76,8 +96,8 @@ struct ProcessorState {
         SvfLaneN<simd::Float256> svf256;
     };
 
-    std::complex<float> band0_s1[global::kMaxPoles * 2];
-    std::complex<float> band0_s2[global::kMaxPoles * 2];
+    std::complex<float> band0_s1[global::kMaxPoles * 2]{};
+    std::complex<float> band0_s2[global::kMaxPoles * 2]{};
 };
 
 struct Param {
@@ -107,3 +127,5 @@ struct ProcessorDsp {
 
 ProcessorDsp GetProcessorDsp() noexcept;
 }
+
+#pragma GCC diagnostic pop

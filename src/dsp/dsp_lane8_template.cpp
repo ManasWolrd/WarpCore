@@ -3,9 +3,166 @@
 #include <cassert>
 #include <complex>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 namespace warpcore {
+
+struct ComplexPhase {
+    simd::Complex256 pre_osc;
+    simd::Complex256 post_osc;
+    simd::Complex256 pre_osc_n_val;
+    simd::Complex256 post_osc_n_val;
+    simd::Float256 band_gain;
+};
+template <FreqDistrbution kFreqMode>
+static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::complex<float> post_osc_f32,
+                                     float band0_wet_mix) {
+    ComplexPhase r;
+
+    const auto pre_osc_f32_0 = std::complex{1.0f, 0.0f};
+    const auto pre_osc_f32_1 = pre_osc_f32;
+    const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32;
+    const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
+    const auto pre_osc_f32_4 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
+    const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_4;
+    const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_4;
+    const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_4;
+    const auto pre_osc_f32_8 = pre_osc_f32_4 * pre_osc_f32_4;
+    const auto pre_osc_f32_9 = pre_osc_f32_5 * pre_osc_f32_4;
+    const auto pre_osc_f32_10 = pre_osc_f32_6 * pre_osc_f32_4;
+    const auto pre_osc_f32_11 = pre_osc_f32_7 * pre_osc_f32_4;
+    const auto pre_osc_f32_12 = pre_osc_f32_8 * pre_osc_f32_4;
+    const auto pre_osc_f32_13 = pre_osc_f32_9 * pre_osc_f32_4;
+    const auto pre_osc_f32_14 = pre_osc_f32_10 * pre_osc_f32_4;
+    const auto pre_osc_f32_15 = pre_osc_f32_11 * pre_osc_f32_4;
+    const auto pre_osc_f32_16 = pre_osc_f32_12 * pre_osc_f32_4;
+
+    const auto post_osc_f32_0 = std::complex{1.0f, 0.0f};
+    const auto post_osc_f32_1 = post_osc_f32;
+    const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32;
+    const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32;
+    const auto post_osc_f32_4 = post_osc_f32 * post_osc_f32 * post_osc_f32 * post_osc_f32;
+    const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_4;
+    const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_4;
+    const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_4;
+    const auto post_osc_f32_8 = post_osc_f32_4 * post_osc_f32_4;
+    const auto post_osc_f32_9 = post_osc_f32_5 * post_osc_f32_4;
+    const auto post_osc_f32_10 = post_osc_f32_6 * post_osc_f32_4;
+    const auto post_osc_f32_11 = post_osc_f32_7 * post_osc_f32_4;
+    const auto post_osc_f32_12 = post_osc_f32_8 * post_osc_f32_4;
+    const auto post_osc_f32_13 = post_osc_f32_9 * post_osc_f32_4;
+    const auto post_osc_f32_14 = post_osc_f32_10 * post_osc_f32_4;
+    const auto post_osc_f32_15 = post_osc_f32_11 * post_osc_f32_4;
+    const auto post_osc_f32_16 = post_osc_f32_12 * post_osc_f32_4;
+
+    if constexpr (kFreqMode == FreqDistrbution::k0_n) {
+        r.pre_osc = simd::Complex256{
+            .re = simd::BroadcastF256(pre_osc_f32_8.real()),
+            .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
+        };
+        r.post_osc = simd::Complex256{
+            .re = simd::BroadcastF256(post_osc_f32_8.real()),
+            .im = simd::BroadcastF256(post_osc_f32_8.imag()),
+        };
+
+        r.pre_osc_n_val = simd::Complex256{
+            .re = {pre_osc_f32_0.real(), pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(),
+                   pre_osc_f32_4.real(), pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real()},
+            .im = {pre_osc_f32_0.imag(), pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(),
+                   pre_osc_f32_4.imag(), pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag()},
+        };
+        r.post_osc_n_val = simd::Complex256{
+            .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(),
+                   post_osc_f32_4.real(), post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real()},
+            .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
+                   post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
+        };
+
+        r.band_gain = simd::Float256{band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
+    }
+    else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
+        r.pre_osc = simd::Complex256{
+            .re = simd::BroadcastF256(pre_osc_f32_8.real()),
+            .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
+        };
+        r.post_osc = simd::Complex256{
+            .re = simd::BroadcastF256(post_osc_f32_8.real()),
+            .im = simd::BroadcastF256(post_osc_f32_8.imag()),
+        };
+
+        r.pre_osc_n_val = simd::Complex256{
+            .re = {pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(), pre_osc_f32_4.real(),
+                   pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real(), pre_osc_f32_8.real()},
+            .im = {pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(), pre_osc_f32_4.imag(),
+                   pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag(), pre_osc_f32_8.imag()},
+        };
+        r.post_osc_n_val = simd::Complex256{
+            .re = {post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(), post_osc_f32_4.real(),
+                   post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real(), post_osc_f32_8.real()},
+            .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag(),
+                   post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag(), post_osc_f32_8.imag()},
+        };
+
+        r.band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
+    }
+    else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
+        r.pre_osc = simd::Complex256{
+            .re = simd::BroadcastF256(pre_osc_f32_16.real()),
+            .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
+        };
+        r.post_osc = simd::Complex256{
+            .re = simd::BroadcastF256(post_osc_f32_16.real()),
+            .im = simd::BroadcastF256(post_osc_f32_16.imag()),
+        };
+
+        r.pre_osc_n_val = simd::Complex256{
+            .re = {pre_osc_f32_0.real(), pre_osc_f32_2.real(), pre_osc_f32_4.real(), pre_osc_f32_6.real(),
+                   pre_osc_f32_8.real(), pre_osc_f32_10.real(), pre_osc_f32_12.real(), pre_osc_f32_14.real()},
+            .im = {pre_osc_f32_0.imag(), pre_osc_f32_2.imag(), pre_osc_f32_4.imag(), pre_osc_f32_6.imag(),
+                   pre_osc_f32_8.imag(), pre_osc_f32_10.imag(), pre_osc_f32_12.imag(), pre_osc_f32_14.imag()},
+        };
+        r.post_osc_n_val = simd::Complex256{
+            .re = {post_osc_f32_0.real(), post_osc_f32_2.real(), post_osc_f32_4.real(), post_osc_f32_6.real(),
+                   post_osc_f32_8.real(), post_osc_f32_10.real(), post_osc_f32_12.real(), post_osc_f32_14.real()},
+            .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag(),
+                   post_osc_f32_8.imag(), post_osc_f32_10.imag(), post_osc_f32_12.imag(), post_osc_f32_14.imag()},
+        };
+
+        r.band_gain = simd::Float256{band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
+    }
+    else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
+        r.pre_osc = simd::Complex256{
+            .re = simd::BroadcastF256(pre_osc_f32_16.real()),
+            .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
+        };
+        r.post_osc = simd::Complex256{
+            .re = simd::BroadcastF256(post_osc_f32_16.real()),
+            .im = simd::BroadcastF256(post_osc_f32_16.imag()),
+        };
+
+        r.pre_osc_n_val = simd::Complex256{
+            .re = {pre_osc_f32_1.real(), pre_osc_f32_3.real(), pre_osc_f32_5.real(), pre_osc_f32_7.real(),
+                   pre_osc_f32_9.real(), pre_osc_f32_11.real(), pre_osc_f32_13.real(), pre_osc_f32_15.real()},
+            .im = {pre_osc_f32_1.imag(), pre_osc_f32_3.imag(), pre_osc_f32_5.imag(), pre_osc_f32_7.imag(),
+                   pre_osc_f32_9.imag(), pre_osc_f32_11.imag(), pre_osc_f32_13.imag(), pre_osc_f32_15.imag()},
+        };
+        r.post_osc_n_val = simd::Complex256{
+            .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real(),
+                   post_osc_f32_9.real(), post_osc_f32_11.real(), post_osc_f32_13.real(), post_osc_f32_15.real()},
+            .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
+                   post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
+        };
+
+        r.band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
+    }
+
+    return r;
+}
+
 template <FreqDistrbution kFreqMode, int kPoles>
-static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left, float* right, int num_samples) noexcept {
+static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left, float* right,
+                                   int num_samples) noexcept {
     constexpr simd::Array256<simd::Float256, 8> kBandGainLut{
         simd::Float256{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
         simd::Float256{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
@@ -26,12 +183,29 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
+    float inv_samples = 1.0f / static_cast<float>(num_samples);
+    float pre_osc_phase_inc = state.last_pre_osc_phase_inc;
+    float delta_pre_osc_phase_inc = (state.pre_osc_phase_inc - pre_osc_phase_inc) * inv_samples;
+    float post_osc_phase_inc = state.last_post_osc_phase_inc;
+    float delta_post_osc_phase_inc = (state.post_osc_phase_inc - post_osc_phase_inc) * inv_samples;
+
+    auto svf_g = state.svf256.last_g;
+    auto svf_d = state.svf256.last_d;
+    decltype(svf_g) delta_svf_g;
+    decltype(svf_d) delta_svf_d;
+    for (int i = 0; i < state.svf256.kSvfCoeffSize; ++i) {
+        delta_svf_g[i] = (state.svf256.g[i] - svf_g[i]) * inv_samples;
+        delta_svf_d[i] = (state.svf256.d[i] - svf_d[i]) * inv_samples;
+    }
+
     for (int i = 0; i < num_samples; i++) {
         // -------------------- tick complex sine generators --------------------
-        state.pre_osc_phase += state.pre_osc_phase_inc;
+        state.pre_osc_phase += pre_osc_phase_inc;
+        pre_osc_phase_inc += delta_pre_osc_phase_inc;
         state.pre_osc_phase -= std::floor(state.pre_osc_phase);
 
-        state.post_osc_phase += state.post_osc_phase_inc;
+        state.post_osc_phase += post_osc_phase_inc;
+        post_osc_phase_inc += delta_post_osc_phase_inc;
         state.post_osc_phase -= std::floor(state.post_osc_phase);
 
         // e^jwt
@@ -41,148 +215,17 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi),
                                             std::sin(state.post_osc_phase * twopi)};
 
-        const auto pre_osc_f32_0 = std::complex{1.0f, 0.0f};
-        const auto pre_osc_f32_1 = pre_osc_f32;
-        const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_4 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_4;
-        const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_4;
-        const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_4;
-        const auto pre_osc_f32_8 = pre_osc_f32_4 * pre_osc_f32_4;
-        const auto pre_osc_f32_9 = pre_osc_f32_5 * pre_osc_f32_4;
-        const auto pre_osc_f32_10 = pre_osc_f32_6 * pre_osc_f32_4;
-        const auto pre_osc_f32_11 = pre_osc_f32_7 * pre_osc_f32_4;
-        const auto pre_osc_f32_12 = pre_osc_f32_8 * pre_osc_f32_4;
-        const auto pre_osc_f32_13 = pre_osc_f32_9 * pre_osc_f32_4;
-        const auto pre_osc_f32_14 = pre_osc_f32_10 * pre_osc_f32_4;
-        const auto pre_osc_f32_15 = pre_osc_f32_11 * pre_osc_f32_4;
-        const auto pre_osc_f32_16 = pre_osc_f32_12 * pre_osc_f32_4;
-
-        const auto post_osc_f32_0 = std::complex{1.0f, 0.0f};
-        const auto post_osc_f32_1 = post_osc_f32;
-        const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_4 = post_osc_f32 * post_osc_f32 * post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_4;
-        const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_4;
-        const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_4;
-        const auto post_osc_f32_8 = post_osc_f32_4 * post_osc_f32_4;
-        const auto post_osc_f32_9 = post_osc_f32_5 * post_osc_f32_4;
-        const auto post_osc_f32_10 = post_osc_f32_6 * post_osc_f32_4;
-        const auto post_osc_f32_11 = post_osc_f32_7 * post_osc_f32_4;
-        const auto post_osc_f32_12 = post_osc_f32_8 * post_osc_f32_4;
-        const auto post_osc_f32_13 = post_osc_f32_9 * post_osc_f32_4;
-        const auto post_osc_f32_14 = post_osc_f32_10 * post_osc_f32_4;
-        const auto post_osc_f32_15 = post_osc_f32_11 * post_osc_f32_4;
-        const auto post_osc_f32_16 = post_osc_f32_12 * post_osc_f32_4;
-
         simd::Complex256 pre_osc;
         simd::Complex256 post_osc;
         simd::Complex256 pre_osc_n_val;
         simd::Complex256 post_osc_n_val;
         simd::Float256 band_gain;
-
-        if constexpr (kFreqMode == FreqDistrbution::k0_n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_8.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_8.real()),
-                .im = simd::BroadcastF256(post_osc_f32_8.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_0.real(), pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(),
-                       pre_osc_f32_4.real(), pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real()},
-                .im = {pre_osc_f32_0.imag(), pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(),
-                       pre_osc_f32_4.imag(), pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(),
-                       post_osc_f32_4.real(), post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real()},
-                .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
-                       post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
-            };
-
-            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        }
-        else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_8.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_8.real()),
-                .im = simd::BroadcastF256(post_osc_f32_8.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(), pre_osc_f32_4.real(),
-                       pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real(), pre_osc_f32_8.real()},
-                .im = {pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(), pre_osc_f32_4.imag(),
-                       pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag(), pre_osc_f32_8.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(), post_osc_f32_4.real(),
-                       post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real(), post_osc_f32_8.real()},
-                .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag(),
-                       post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag(), post_osc_f32_8.imag()},
-            };
-
-            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
-        }
-        else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_16.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_16.real()),
-                .im = simd::BroadcastF256(post_osc_f32_16.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_0.real(), pre_osc_f32_2.real(), pre_osc_f32_4.real(), pre_osc_f32_6.real(),
-                       pre_osc_f32_8.real(), pre_osc_f32_10.real(), pre_osc_f32_12.real(), pre_osc_f32_14.real()},
-                .im = {pre_osc_f32_0.imag(), pre_osc_f32_2.imag(), pre_osc_f32_4.imag(), pre_osc_f32_6.imag(),
-                       pre_osc_f32_8.imag(), pre_osc_f32_10.imag(), pre_osc_f32_12.imag(), pre_osc_f32_14.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_0.real(), post_osc_f32_2.real(), post_osc_f32_4.real(), post_osc_f32_6.real(),
-                       post_osc_f32_8.real(), post_osc_f32_10.real(), post_osc_f32_12.real(), post_osc_f32_14.real()},
-                .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag(),
-                       post_osc_f32_8.imag(), post_osc_f32_10.imag(), post_osc_f32_12.imag(), post_osc_f32_14.imag()},
-            };
-
-            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        }
-        else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_16.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_16.real()),
-                .im = simd::BroadcastF256(post_osc_f32_16.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_1.real(), pre_osc_f32_3.real(), pre_osc_f32_5.real(), pre_osc_f32_7.real(),
-                       pre_osc_f32_9.real(), pre_osc_f32_11.real(), pre_osc_f32_13.real(), pre_osc_f32_15.real()},
-                .im = {pre_osc_f32_1.imag(), pre_osc_f32_3.imag(), pre_osc_f32_5.imag(), pre_osc_f32_7.imag(),
-                       pre_osc_f32_9.imag(), pre_osc_f32_11.imag(), pre_osc_f32_13.imag(), pre_osc_f32_15.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real(),
-                       post_osc_f32_9.real(), post_osc_f32_11.real(), post_osc_f32_13.real(), post_osc_f32_15.real()},
-                .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
-                       post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
-            };
-
-            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f; 
-        }
+        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32, band0_wet_mix);
+        pre_osc = r.pre_osc;
+        post_osc = r.post_osc;
+        pre_osc_n_val = r.pre_osc_n_val;
+        post_osc_n_val = r.post_osc_n_val;
+        band_gain = r.band_gain;
 
         // -------------------- process first band --------------------
         float x_left = left[i];
@@ -191,8 +234,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         std::complex<float> cpx_x_left = x_left * pre_osc_f32;
         std::complex<float> cpx_x_right = x_right * pre_osc_f32;
         for (int k = 0; k < kPoles; ++k) {
-            const float gk = state.svf256.g[k];
-            const float dk = state.svf256.d[k];
+            const float gk = svf_g[k];
+            const float dk = svf_d[k];
             auto& s1_l = state.band0_s1[2 * k];
             auto& s1_r = state.band0_s1[2 * k + 1];
             auto& s2_l = state.band0_s2[2 * k];
@@ -214,11 +257,13 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
             cpx_x_left = lp_l;
             cpx_x_right = lp_r;
         }
-        float y_l = (cpx_x_left * std::conj(post_osc_f32)).real() * band0_dry_mix;
-        float y_r = (cpx_x_right * std::conj(post_osc_f32)).real() * band0_dry_mix;
+        float first_band_y_l = (cpx_x_left * std::conj(post_osc_f32)).real() * band0_dry_mix;
+        float first_band_y_r = (cpx_x_right * std::conj(post_osc_f32)).real() * band0_dry_mix;
 
         // -------------------- process bands --------------------
         auto* svf_state = state.svf256.state.data();
+        simd::Float256 y_l{};
+        simd::Float256 y_r{};
 
         for (int j = 0; j < simd_loop_count - 1; ++j) {
             // std::complex<float> tmp = x * pre_osc_n_val;
@@ -228,8 +273,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
             pre_osc_n_val *= pre_osc;
 
             for (int k = 0; k < kPoles; ++k) {
-                const float gk = state.svf128.g[k];
-                const float dk = state.svf128.d[k];
+                const float gk = svf_g[k];
+                const float dk = svf_d[k];
 
                 auto s1_re_l = svf_state->s1_re_l;
                 auto s1_im_l = svf_state->s1_im_l;
@@ -280,8 +325,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
             // post_osc_n_val *= post_osc;
             auto band_out_l = tmp_l * post_osc_n_val;
             auto band_out_r = tmp_r * post_osc_n_val;
-            y_l += simd::ReduceAdd(band_out_l.re * band_gain);
-            y_r += simd::ReduceAdd(band_out_r.re * band_gain);
+            y_l += band_out_l.re * band_gain;
+            y_r += band_out_r.re * band_gain;
             post_osc_n_val *= post_osc;
 
             band_gain = simd::BroadcastF256(2.0f);
@@ -294,8 +339,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         auto tmp_r = simd::BroadcastF256(x_right) * pre_osc_n_val;
 
         for (int k = 0; k < kPoles; ++k) {
-            const float gk = state.svf128.g[k];
-            const float dk = state.svf128.d[k];
+            const float gk = svf_g[k];
+            const float dk = svf_d[k];
 
             auto s1_re_l = svf_state->s1_re_l;
             auto s1_im_l = svf_state->s1_im_l;
@@ -346,11 +391,23 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         // post_osc_n_val *= post_osc;
         auto band_out_l = tmp_l * post_osc_n_val;
         auto band_out_r = tmp_r * post_osc_n_val;
-        y_l += simd::ReduceAdd(band_out_l.re * tail_gain);
-        y_r += simd::ReduceAdd(band_out_r.re * tail_gain);
+        y_l += band_out_l.re * tail_gain;
+        y_r += band_out_r.re * tail_gain;
 
-        left[i] = y_l;
-        right[i] = y_r;
+        left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
+        right[i] = simd::ReduceAdd(y_r) + first_band_y_r;
+
+        for (int j = 0; j < state.svf256.kSvfCoeffSize; ++j) {
+            svf_d[j] += delta_svf_d[j];
+            svf_g[j] += delta_svf_g[j];
+        }
+    }
+
+    state.last_pre_osc_phase_inc = state.pre_osc_phase_inc;
+    state.last_post_osc_phase_inc = state.post_osc_phase_inc;
+    for (int i = 0; i < state.svf256.kSvfCoeffSize; ++i) {
+        state.svf256.last_d[i] = state.svf256.d[i];
+        state.svf256.last_g[i] = state.svf256.g[i];
     }
 }
 
@@ -376,12 +433,29 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         tail_gain[0] = band0_wet_mix * 2.0f;
     }
 
+    float inv_samples = 1.0f / static_cast<float>(num_samples);
+    float pre_osc_phase_inc = state.last_pre_osc_phase_inc;
+    float delta_pre_osc_phase_inc = (state.pre_osc_phase_inc - pre_osc_phase_inc) * inv_samples;
+    float post_osc_phase_inc = state.last_post_osc_phase_inc;
+    float delta_post_osc_phase_inc = (state.post_osc_phase_inc - post_osc_phase_inc) * inv_samples;
+
+    auto svf_g = state.svf256.last_g;
+    auto svf_d = state.svf256.last_d;
+    decltype(svf_g) delta_svf_g;
+    decltype(svf_d) delta_svf_d;
+    for (int i = 0; i < state.svf256.kSvfCoeffSize; ++i) {
+        delta_svf_g[i] = (state.svf256.g[i] - svf_g[i]) * inv_samples;
+        delta_svf_d[i] = (state.svf256.d[i] - svf_d[i]) * inv_samples;
+    }
+
     for (int i = 0; i < num_samples; i++) {
         // -------------------- tick complex sine generators --------------------
-        state.pre_osc_phase += state.pre_osc_phase_inc;
+        state.pre_osc_phase += pre_osc_phase_inc;
+        pre_osc_phase_inc += delta_pre_osc_phase_inc;
         state.pre_osc_phase -= std::floor(state.pre_osc_phase);
 
-        state.post_osc_phase += state.post_osc_phase_inc;
+        state.post_osc_phase += post_osc_phase_inc;
+        post_osc_phase_inc += delta_post_osc_phase_inc;
         state.post_osc_phase -= std::floor(state.post_osc_phase);
 
         // e^jwt
@@ -391,156 +465,25 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         std::complex<float> post_osc_f32 = {std::cos(state.post_osc_phase * twopi),
                                             std::sin(state.post_osc_phase * twopi)};
 
-        const auto pre_osc_f32_0 = std::complex{1.0f, 0.0f};
-        const auto pre_osc_f32_1 = pre_osc_f32;
-        const auto pre_osc_f32_2 = pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_3 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_4 = pre_osc_f32 * pre_osc_f32 * pre_osc_f32 * pre_osc_f32;
-        const auto pre_osc_f32_5 = pre_osc_f32_1 * pre_osc_f32_4;
-        const auto pre_osc_f32_6 = pre_osc_f32_2 * pre_osc_f32_4;
-        const auto pre_osc_f32_7 = pre_osc_f32_3 * pre_osc_f32_4;
-        const auto pre_osc_f32_8 = pre_osc_f32_4 * pre_osc_f32_4;
-        const auto pre_osc_f32_9 = pre_osc_f32_5 * pre_osc_f32_4;
-        const auto pre_osc_f32_10 = pre_osc_f32_6 * pre_osc_f32_4;
-        const auto pre_osc_f32_11 = pre_osc_f32_7 * pre_osc_f32_4;
-        const auto pre_osc_f32_12 = pre_osc_f32_8 * pre_osc_f32_4;
-        const auto pre_osc_f32_13 = pre_osc_f32_9 * pre_osc_f32_4;
-        const auto pre_osc_f32_14 = pre_osc_f32_10 * pre_osc_f32_4;
-        const auto pre_osc_f32_15 = pre_osc_f32_11 * pre_osc_f32_4;
-        const auto pre_osc_f32_16 = pre_osc_f32_12 * pre_osc_f32_4;
-
-        const auto post_osc_f32_0 = std::complex{1.0f, 0.0f};
-        const auto post_osc_f32_1 = post_osc_f32;
-        const auto post_osc_f32_2 = post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_3 = post_osc_f32 * post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_4 = post_osc_f32 * post_osc_f32 * post_osc_f32 * post_osc_f32;
-        const auto post_osc_f32_5 = post_osc_f32_1 * post_osc_f32_4;
-        const auto post_osc_f32_6 = post_osc_f32_2 * post_osc_f32_4;
-        const auto post_osc_f32_7 = post_osc_f32_3 * post_osc_f32_4;
-        const auto post_osc_f32_8 = post_osc_f32_4 * post_osc_f32_4;
-        const auto post_osc_f32_9 = post_osc_f32_5 * post_osc_f32_4;
-        const auto post_osc_f32_10 = post_osc_f32_6 * post_osc_f32_4;
-        const auto post_osc_f32_11 = post_osc_f32_7 * post_osc_f32_4;
-        const auto post_osc_f32_12 = post_osc_f32_8 * post_osc_f32_4;
-        const auto post_osc_f32_13 = post_osc_f32_9 * post_osc_f32_4;
-        const auto post_osc_f32_14 = post_osc_f32_10 * post_osc_f32_4;
-        const auto post_osc_f32_15 = post_osc_f32_11 * post_osc_f32_4;
-        const auto post_osc_f32_16 = post_osc_f32_12 * post_osc_f32_4;
-
         simd::Complex256 pre_osc;
         simd::Complex256 post_osc;
         simd::Complex256 pre_osc_n_val;
         simd::Complex256 post_osc_n_val;
         simd::Float256 band_gain;
-
-        if constexpr (kFreqMode == FreqDistrbution::k0_n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_8.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_8.real()),
-                .im = simd::BroadcastF256(post_osc_f32_8.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_0.real(), pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(),
-                       pre_osc_f32_4.real(), pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real()},
-                .im = {pre_osc_f32_0.imag(), pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(),
-                       pre_osc_f32_4.imag(), pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_0.real(), post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(),
-                       post_osc_f32_4.real(), post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real()},
-                .im = {post_osc_f32_0.imag(), post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(),
-                       post_osc_f32_4.imag(), post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag()},
-            };
-
-            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        }
-        else if constexpr (kFreqMode == FreqDistrbution::k1_n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_8.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_8.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_8.real()),
-                .im = simd::BroadcastF256(post_osc_f32_8.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_1.real(), pre_osc_f32_2.real(), pre_osc_f32_3.real(), pre_osc_f32_4.real(),
-                       pre_osc_f32_5.real(), pre_osc_f32_6.real(), pre_osc_f32_7.real(), pre_osc_f32_8.real()},
-                .im = {pre_osc_f32_1.imag(), pre_osc_f32_2.imag(), pre_osc_f32_3.imag(), pre_osc_f32_4.imag(),
-                       pre_osc_f32_5.imag(), pre_osc_f32_6.imag(), pre_osc_f32_7.imag(), pre_osc_f32_8.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_1.real(), post_osc_f32_2.real(), post_osc_f32_3.real(), post_osc_f32_4.real(),
-                       post_osc_f32_5.real(), post_osc_f32_6.real(), post_osc_f32_7.real(), post_osc_f32_8.real()},
-                .im = {post_osc_f32_1.imag(), post_osc_f32_2.imag(), post_osc_f32_3.imag(), post_osc_f32_4.imag(),
-                       post_osc_f32_5.imag(), post_osc_f32_6.imag(), post_osc_f32_7.imag(), post_osc_f32_8.imag()},
-            };
-
-            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f;
-        }
-        else if constexpr (kFreqMode == FreqDistrbution::k0_2n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_16.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_16.real()),
-                .im = simd::BroadcastF256(post_osc_f32_16.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_0.real(), pre_osc_f32_2.real(), pre_osc_f32_4.real(), pre_osc_f32_6.real(),
-                       pre_osc_f32_8.real(), pre_osc_f32_10.real(), pre_osc_f32_12.real(), pre_osc_f32_14.real()},
-                .im = {pre_osc_f32_0.imag(), pre_osc_f32_2.imag(), pre_osc_f32_4.imag(), pre_osc_f32_6.imag(),
-                       pre_osc_f32_8.imag(), pre_osc_f32_10.imag(), pre_osc_f32_12.imag(), pre_osc_f32_14.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_0.real(), post_osc_f32_2.real(), post_osc_f32_4.real(), post_osc_f32_6.real(),
-                       post_osc_f32_8.real(), post_osc_f32_10.real(), post_osc_f32_12.real(), post_osc_f32_14.real()},
-                .im = {post_osc_f32_0.imag(), post_osc_f32_2.imag(), post_osc_f32_4.imag(), post_osc_f32_6.imag(),
-                       post_osc_f32_8.imag(), post_osc_f32_10.imag(), post_osc_f32_12.imag(), post_osc_f32_14.imag()},
-            };
-
-            band_gain = {band0_wet_mix, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        }
-        else if constexpr (kFreqMode == FreqDistrbution::k1_2n) {
-            pre_osc = simd::Complex256{
-                .re = simd::BroadcastF256(pre_osc_f32_16.real()),
-                .im = simd::BroadcastF256(pre_osc_f32_16.imag()),
-            };
-            post_osc = simd::Complex256{
-                .re = simd::BroadcastF256(post_osc_f32_16.real()),
-                .im = simd::BroadcastF256(post_osc_f32_16.imag()),
-            };
-
-            pre_osc_n_val = simd::Complex256{
-                .re = {pre_osc_f32_1.real(), pre_osc_f32_3.real(), pre_osc_f32_5.real(), pre_osc_f32_7.real(),
-                       pre_osc_f32_9.real(), pre_osc_f32_11.real(), pre_osc_f32_13.real(), pre_osc_f32_15.real()},
-                .im = {pre_osc_f32_1.imag(), pre_osc_f32_3.imag(), pre_osc_f32_5.imag(), pre_osc_f32_7.imag(),
-                       pre_osc_f32_9.imag(), pre_osc_f32_11.imag(), pre_osc_f32_13.imag(), pre_osc_f32_15.imag()},
-            };
-            post_osc_n_val = simd::Complex256{
-                .re = {post_osc_f32_1.real(), post_osc_f32_3.real(), post_osc_f32_5.real(), post_osc_f32_7.real(),
-                       post_osc_f32_9.real(), post_osc_f32_11.real(), post_osc_f32_13.real(), post_osc_f32_15.real()},
-                .im = {post_osc_f32_1.imag(), post_osc_f32_3.imag(), post_osc_f32_5.imag(), post_osc_f32_7.imag(),
-                       post_osc_f32_9.imag(), post_osc_f32_11.imag(), post_osc_f32_13.imag(), post_osc_f32_15.imag()},
-            };
-
-            band_gain = simd::Float256{band0_wet_mix, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f} * 2.0f; 
-        }
+        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32, band0_wet_mix);
+        pre_osc = r.pre_osc;
+        post_osc = r.post_osc;
+        pre_osc_n_val = r.pre_osc_n_val;
+        post_osc_n_val = r.post_osc_n_val;
+        band_gain = r.band_gain;
 
         // -------------------- process first band --------------------
         float x_left = left[i];
 
         std::complex<float> cpx_x_left = x_left * pre_osc_f32;
         for (int k = 0; k < kPoles; ++k) {
-            const float gk = state.svf256.g[k];
-            const float dk = state.svf256.d[k];
+            const float gk = svf_g[k];
+            const float dk = svf_d[k];
             auto& s1_l = state.band0_s1[2 * k];
             auto& s2_l = state.band0_s2[2 * k];
 
@@ -553,10 +496,11 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
             s2_l = lp_l + v2_l;
             cpx_x_left = lp_l;
         }
-        float y_l = (cpx_x_left * std::conj(post_osc_f32)).real() * band0_dry_mix;
+        float first_band_y_l = (cpx_x_left * std::conj(post_osc_f32)).real() * band0_dry_mix;
 
         // -------------------- process bands --------------------
         auto* svf_state = state.svf256.state.data();
+        simd::Float256 y_l{};
 
         for (int j = 0; j < simd_loop_count - 1; ++j) {
             // std::complex<float> tmp = x * pre_osc_n_val;
@@ -565,8 +509,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
             pre_osc_n_val *= pre_osc;
 
             for (int k = 0; k < kPoles; ++k) {
-                const float gk = state.svf128.g[k];
-                const float dk = state.svf128.d[k];
+                const float gk = svf_g[k];
+                const float dk = svf_d[k];
 
                 auto s1_re_l = svf_state->s1_re_l;
                 auto s1_im_l = svf_state->s1_im_l;
@@ -596,7 +540,7 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
             // y += (tmp * post_osc_n_val).real();
             // post_osc_n_val *= post_osc;
             auto band_out_l = tmp_l * post_osc_n_val;
-            y_l += simd::ReduceAdd(band_out_l.re * band_gain);
+            y_l += band_out_l.re * band_gain;
             post_osc_n_val *= post_osc;
 
             band_gain = simd::BroadcastF256(2.0f);
@@ -608,8 +552,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         auto tmp_l = simd::BroadcastF256(x_left) * pre_osc_n_val;
 
         for (int k = 0; k < kPoles; ++k) {
-            const float gk = state.svf128.g[k];
-            const float dk = state.svf128.d[k];
+            const float gk = svf_g[k];
+            const float dk = svf_d[k];
 
             auto s1_re_l = svf_state->s1_re_l;
             auto s1_im_l = svf_state->s1_im_l;
@@ -639,9 +583,21 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         // y += (tmp * post_osc_n_val).real();
         // post_osc_n_val *= post_osc;
         auto band_out_l = tmp_l * post_osc_n_val;
-        y_l += simd::ReduceAdd(band_out_l.re * tail_gain);
+        y_l += band_out_l.re * tail_gain;
 
-        left[i] = y_l;
+        left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
+
+        for (int j = 0; j < state.svf256.kSvfCoeffSize; ++j) {
+            svf_d[j] += delta_svf_d[j];
+            svf_g[j] += delta_svf_g[j];
+        }
+    }
+
+    state.last_pre_osc_phase_inc = state.pre_osc_phase_inc;
+    state.last_post_osc_phase_inc = state.post_osc_phase_inc;
+    for (int i = 0; i < state.svf256.kSvfCoeffSize; ++i) {
+        state.svf256.last_d[i] = state.svf256.d[i];
+        state.svf256.last_g[i] = state.svf256.g[i];
     }
 }
 
@@ -695,6 +651,7 @@ static void ProcessPoles(warpcore::ProcessorState& state, float* left, float* ri
 
 static void Init(warpcore::ProcessorState& state, float fs) noexcept {
     state.fs = fs;
+    state.svf256.Init();
 }
 
 static void Reset(warpcore::ProcessorState& state) noexcept {
@@ -702,8 +659,8 @@ static void Reset(warpcore::ProcessorState& state) noexcept {
     state.pre_osc_phase = 0.0f;
     state.post_osc_phase = 0.0f;
 
-    std::fill_n(state.band0_s1, global::kMaxPoles * 2, std::complex<float>{});
-    std::fill_n(state.band0_s2, global::kMaxPoles * 2, std::complex<float>{});
+    std::fill_n(state.band0_s1, state.svf256.kSvfCoeffSize * 2, std::complex<float>{});
+    std::fill_n(state.band0_s2, state.svf256.kSvfCoeffSize * 2, std::complex<float>{});
 }
 
 static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) noexcept {
@@ -793,3 +750,5 @@ static void Process(warpcore::ProcessorState& state, float* left, float* right, 
 
 ProcessorDsp DSP_EXPORT_NAME{Init, Reset, Update, Process, DSP_INST_NAME};
 } // namespace warpcore
+
+#pragma GCC diagnostic pop
