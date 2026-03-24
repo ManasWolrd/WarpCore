@@ -16,10 +16,10 @@ template <simd::IsSimdFloat SimdT>
 struct SvfLaneN {
     static constexpr int kSvfCoeffSize = AlignUp(global::kMaxPoles, simd::LaneSize<SimdT>);
 
-    std::array<float, kSvfCoeffSize> g;
-    std::array<float, kSvfCoeffSize> d;
-    std::array<float, kSvfCoeffSize> last_g;
-    std::array<float, kSvfCoeffSize> last_d;
+    std::array<float, kSvfCoeffSize> g{};
+    std::array<float, kSvfCoeffSize> d{};
+    std::array<float, kSvfCoeffSize> last_g{};
+    std::array<float, kSvfCoeffSize> last_d{};
 
     struct SvfState {
        SimdT s1_re_l;
@@ -31,7 +31,7 @@ struct SvfLaneN {
        SimdT s2_im_l;
        SimdT s2_im_r;
     };
-    simd::Array256<SvfState, global::kMaxBands * global::kMaxPoles / simd::LaneSize<SimdT>> state;
+    simd::Array256<SvfState, global::kMaxBands * global::kMaxPoles / simd::LaneSize<SimdT>> state{};
 
     void Init() noexcept {
         g.fill(0.0f);
@@ -91,10 +91,8 @@ struct ProcessorState {
     float last_post_osc_phase_inc{};
 
     // complex lowpass filter
-    union {
-        SvfLaneN<simd::Float128> svf128;
-        SvfLaneN<simd::Float256> svf256;
-    };
+    SvfLaneN<simd::Float128> svf128;
+    SvfLaneN<simd::Float256> svf256;
 
     std::complex<float> band0_s1[global::kMaxPoles * 2]{};
     std::complex<float> band0_s2[global::kMaxPoles * 2]{};
