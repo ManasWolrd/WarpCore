@@ -18,8 +18,6 @@ struct SvfLaneN {
 
     std::array<float, kSvfCoeffSize> g{};
     std::array<float, kSvfCoeffSize> d{};
-    std::array<float, kSvfCoeffSize> last_g{};
-    std::array<float, kSvfCoeffSize> last_d{};
 
     struct SvfState {
        SimdT s1_re_l;
@@ -36,8 +34,6 @@ struct SvfLaneN {
     void Init() noexcept {
         g.fill(0.0f);
         d.fill(0.0f);
-        last_d.fill(0.0f);
-        last_g.fill(0.0f);
     }
 
     void Reset() noexcept {

@@ -153,14 +153,8 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
     float post_osc_phase_inc = state.last_post_osc_phase_inc;
     float delta_post_osc_phase_inc = (state.post_osc_phase_inc - post_osc_phase_inc) * inv_samples;
 
-    auto svf_g = state.svf128.last_g;
-    auto svf_d = state.svf128.last_d;
-    decltype(svf_g) delta_svf_g;
-    decltype(svf_d) delta_svf_d;
-    for (int i = 0; i < state.svf128.kSvfCoeffSize; ++i) {
-        delta_svf_g[i] = (state.svf128.g[i] - svf_g[i]) * inv_samples;
-        delta_svf_d[i] = (state.svf128.d[i] - svf_d[i]) * inv_samples;
-    }
+    const auto svf_g = state.svf128.g;
+    const auto svf_d = state.svf128.d;
 
     for (int i = 0; i < num_samples; i++) {
         // -------------------- tick complex sine generators --------------------
@@ -360,19 +354,10 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
 
         left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
         right[i] = simd::ReduceAdd(y_r) + first_band_y_r;
-
-        for (int j = 0; j < state.svf128.kSvfCoeffSize; ++j) {
-            svf_d[j] += delta_svf_d[j];
-            svf_g[j] += delta_svf_g[j];
-        }
     }
 
     state.last_pre_osc_phase_inc = state.pre_osc_phase_inc;
     state.last_post_osc_phase_inc = state.post_osc_phase_inc;
-    for (int i = 0; i < state.svf128.kSvfCoeffSize; ++i) {
-        state.svf128.last_d[i] = state.svf128.d[i];
-        state.svf128.last_g[i] = state.svf128.g[i];
-    }
 }
 
 template <FreqDistrbution kFreqMode, int kPoles>
@@ -399,14 +384,8 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
     float post_osc_phase_inc = state.last_post_osc_phase_inc;
     float delta_post_osc_phase_inc = (state.post_osc_phase_inc - post_osc_phase_inc) * inv_samples;
 
-    auto svf_g = state.svf128.last_g;
-    auto svf_d = state.svf128.last_d;
-    decltype(svf_g) delta_svf_g;
-    decltype(svf_d) delta_svf_d;
-    for (int i = 0; i < state.svf128.kSvfCoeffSize; ++i) {
-        delta_svf_g[i] = (state.svf128.g[i] - svf_g[i]) * inv_samples;
-        delta_svf_d[i] = (state.svf128.d[i] - svf_d[i]) * inv_samples;
-    }
+    const auto svf_g = state.svf128.g;
+    const auto svf_d = state.svf128.d;
 
     for (int i = 0; i < num_samples; i++) {
         // -------------------- tick complex sine generators --------------------
@@ -546,19 +525,10 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         y_l += band_out_l.re * tail_gain;
 
         left[i] = simd::ReduceAdd(y_l) + first_band_y_l;
-
-        for (int j = 0; j < state.svf128.kSvfCoeffSize; ++j) {
-            svf_d[j] += delta_svf_d[j];
-            svf_g[j] += delta_svf_g[j];
-        }
     }
 
     state.last_pre_osc_phase_inc = state.pre_osc_phase_inc;
     state.last_post_osc_phase_inc = state.post_osc_phase_inc;
-    for (int i = 0; i < state.svf128.kSvfCoeffSize; ++i) {
-        state.svf128.last_d[i] = state.svf128.d[i];
-        state.svf128.last_g[i] = state.svf128.g[i];
-    }
 }
 
 template <FreqDistrbution kFreqMode, int kPoles>
