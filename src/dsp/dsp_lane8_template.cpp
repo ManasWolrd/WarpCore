@@ -8,7 +8,7 @@
 
 namespace warpcore {
 
-struct ComplexPhase {
+struct ComplexPhase256 {
     simd::Complex256 pre_osc;
     simd::Complex256 post_osc;
     simd::Complex256 pre_osc_n_val;
@@ -16,8 +16,8 @@ struct ComplexPhase {
     simd::Float256 band_gain;
 };
 template <FreqDistrbution kFreqMode>
-static ComplexPhase _GetComplexPhase(std::complex<float> pre_osc_f32, std::complex<float> post_osc_f32) {
-    ComplexPhase r;
+static ComplexPhase256 _GetComplexPhase256(std::complex<float> pre_osc_f32, std::complex<float> post_osc_f32) {
+    ComplexPhase256 r;
 
     const auto pre_osc_f32_0 = std::complex{1.0f, 0.0f};
     const auto pre_osc_f32_1 = pre_osc_f32;
@@ -224,7 +224,7 @@ static void ProcessInternal_Stereo(warpcore::ProcessorState& state, float* left,
         simd::Complex256 pre_osc_n_val;
         simd::Complex256 post_osc_n_val;
         simd::Float256 band_gain;
-        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32);
+        auto r = _GetComplexPhase256<kFreqMode>(pre_osc_f32, post_osc_f32);
         pre_osc = r.pre_osc;
         post_osc = r.post_osc;
         pre_osc_n_val = r.pre_osc_n_val;
@@ -442,7 +442,7 @@ static void ProcessInternal_Mono(warpcore::ProcessorState& state, float* left, i
         simd::Complex256 pre_osc_n_val;
         simd::Complex256 post_osc_n_val;
         simd::Float256 band_gain;
-        auto r = _GetComplexPhase<kFreqMode>(pre_osc_f32, post_osc_f32);
+        auto r = _GetComplexPhase256<kFreqMode>(pre_osc_f32, post_osc_f32);
         pre_osc = r.pre_osc;
         post_osc = r.post_osc;
         pre_osc_n_val = r.pre_osc_n_val;
