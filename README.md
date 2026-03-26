@@ -64,8 +64,24 @@ zero latency with some nonlinear phase from butterworth filter.
 > **Scale** = 1.5  
 > **Poles** = 3  
 > **Pitch** = 0  
-> **Base Mix** = 0  
+> **DryWet** = 1  
 > **Freq Mode** = music: 0 + 2n  
+
+## 参数(Parameter)
+
+It seems that many people cannot understand the parameters of WarpCore, so here is an additional explanation:  
+似乎很多人不能理解WarpCore的参数，在这里增加说明  
+
+| 参数 (Parameter) | 英文说明 (English Description) | 中文说明 (Chinese Description) |
+| :--- | :--- | :--- |
+| **Warp** | Divides the spectrum from 0 to FreqHigh into this number of segments and applies spectral inversion separately to each segment. | 将 0 ~ FreqHigh 的频谱分割为该参数指定的段数，对每个段分别进行光谱反转。 |
+| **Freq High** | Sets the highest frequency for the inverted spectrum; audio above this frequency will be filtered out (silenced). | 设置反转频谱的最高频率，超过此频率的音频将会被过滤（静音）。 |
+| **Scale** | Controls the cutoff frequency of the filter in the inversion device. < 1: comb filter/resonator effects; > 1: segment overlap/rougher texture. | 控制每个频段反转装置中滤波器的截止频率。小于 1 会产生类似梳状滤波（谐振器）的效果；大于 1 会导致段间重叠，质感更粗糙。 |
+| **Poles** | Controls the order of the filter (best between 2-4). Lower: rough texture; Higher: less overlap but enhanced metallic feel. | 控制滤波器阶数（建议设为 2~4）。数值较低质感粗糙，数值较高则段间重叠减少，但会增加微弱的金属感。 |
+| **Pitch** | FormantMode=Pitch: controls output pitch. FormantMode=Formant: shifts formants without changing pitch. | 在 Pitch 模式下控制输出音高；在 Formant 模式下移动共振峰而不改变音高。 |
+| **Dry/Wet** | Mixes dry and inverted wet signals. Nonlinear phase may cause notch filtering or peculiar phase cancellations. | 混合干声与反转湿声。由于滤波器的非线性相位，可能会产生陷波或奇特的相位抵消。 |
+| **Formant Mode** | Controls whether pitch affects the pre-oscillator or the post-oscillator (see **Pitch** explanation). | 控制 Pitch 作用于前振荡器还是后振荡器，具体效果参考 **Pitch** 参数说明。 |
+| **Freq Mode** | Controls oscillator frequency distribution. 0+xn: skips 1st segment inversion; 1+xn: inverts 1st segment (equiv. to Scale*2). | 控制振荡器频率分布。0+xn 基本不反转第一个频段，而 1+xn 会。1+xn 在某种程度上等同于将 Scale 翻倍。 |
 
 ## macOS
 
