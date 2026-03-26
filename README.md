@@ -31,15 +31,6 @@ zero latency with some nonlinear phase from butterworth filter.
   包括：滤波器极点数量、滤波器截止频率缩放。  
   Includes: filter pole count and filter cutoff frequency scaling.
 
-- [ ] 内置带通分频器  
-  Built-in band-splitting crossover.
-
-  包括：低分频和高分频（最后再做）。  
-  Includes: low split and high split (to be done later).
-
-- [ ] 可调整带宽  
-  Adjustable bandwidth.
-
   包括：必须是递增函数的带宽分配。  
   Includes: bandwidth allocation that must follow a monotonic increasing function.
 
@@ -49,7 +40,7 @@ zero latency with some nonlinear phase from butterworth filter.
   应该是加在输出的振荡器上面。  
   This should be applied on the output oscillator stage.
 
-- [ ] 参数平滑  
+- [x] 参数平滑  
   parameter smooth.
 
 ## 图形界面(GUI)
