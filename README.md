@@ -58,6 +58,15 @@ zero latency with some nonlinear phase from butterworth filter.
 > **DryWet** = 1  
 > **Freq Mode** = music: 0 + 2n  
 
+## GUI使用(GUI usage)
+对旋钮右键应该弹出一个菜单，使用**enter**输入想要的数值，使用**reset**重置到默认值。  
+Right-clicking on the knob should bring up a menu, use **enter** to input the desired value, and use **reset** to reset to the default value.  
+双击旋钮也会重置到默认值。  
+Double-clicking the knob will also reset it to the default value.  
+> [!TIP]
+> FreqHigh=Full时频段范围会随着采样率变化，如果想要在所有采样率保持，请使用FreqHigh=19999.2（通过enter输入19999得到）  
+> When FreqHigh=Full, the frequency band range changes with the sampling rate. If you want it to stay the same for all sampling rates, please use FreqHigh=19999.2 (obtained by entering 19999).  
+
 ## 参数(Parameter)
 
 It seems that many people cannot understand the parameters of WarpCore, so here is an additional explanation:  
