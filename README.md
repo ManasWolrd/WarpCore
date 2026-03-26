@@ -31,9 +31,6 @@ zero latency with some nonlinear phase from butterworth filter.
   包括：滤波器极点数量、滤波器截止频率缩放。  
   Includes: filter pole count and filter cutoff frequency scaling.
 
-  包括：必须是递增函数的带宽分配。  
-  Includes: bandwidth allocation that must follow a monotonic increasing function.
-
 - [x] 共振峰移动  
   Formant shifting.
 
