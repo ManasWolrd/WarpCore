@@ -1,5 +1,6 @@
 #include "dsp_state.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <complex>
 
@@ -590,8 +591,8 @@ static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) no
 
     if (pitch_alas || formant_alas) {
         f_first_band_stop *= fshit;
-        state.num_warps = static_cast<int>(fhigh / f_first_band_stop);
-        state.num_warps = std::max(state.num_warps, 1);
+        int max_bands = static_cast<int>(state.fs / 2.0f / f_first_band_stop);
+        state.num_warps = std::clamp(state.num_warps, 1, max_bands);
     }
 
     if (state.freq_distribution == FreqDistrbution::k0_n || state.freq_distribution == FreqDistrbution::k1_n) {
