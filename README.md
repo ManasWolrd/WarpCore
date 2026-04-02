@@ -145,7 +145,6 @@ sudo xattr -dr com.apple.quarantine /path/to/your/plugins/plugin_name.lv2
 
 如果 macOS 阻止打开下载的插件，可以对插件 bundle 执行上面的命令来移除 quarantine 属性。  
 If macOS blocks a downloaded plugin, you can run the commands above on the plugin bundle to remove the quarantine attribute.
-```
 
 ## 构建(Build)
 
