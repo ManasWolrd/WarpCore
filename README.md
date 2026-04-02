@@ -149,7 +149,7 @@ If macOS blocks a downloaded plugin, you can run the commands above on the plugi
 ## 构建(Build)
 
 ```bash
-git clone --recurse https://github.com/ManasWorld/WarpCore.git
+git clone --recurse https://github.com/ManasWolrd/WarpCore.git
 
 # Windows
 cmake -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang -DCMAKE_BUILD_TYPE=Release -S . -B build
