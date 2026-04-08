@@ -78,7 +78,7 @@ It seems that many people cannot understand the parameters of WarpCore, so here 
 | **Pitch** | FormantMode=Pitch: controls output pitch. FormantMode=Formant: shifts formants without changing pitch. | 在 Pitch 模式下控制输出音高；在 Formant 模式下移动共振峰而不改变音高。 |
 | **Dry/Wet** | Mixes dry and inverted wet signals. Nonlinear phase may cause notch filtering or peculiar phase cancellations. | 混合干声与反转湿声。由于滤波器的非线性相位，可能会产生陷波或奇特的相位抵消。 |
 | **Formant Mode** | Controls whether pitch affects the pre-oscillator or the post-oscillator (see **Pitch** explanation). | 控制 Pitch 作用于前振荡器还是后振荡器，具体效果参考 **Pitch** 参数说明。 |
-| **Freq Mode** | Controls oscillator frequency distribution. 0+xn: skips 1st segment inversion; x+n: inverts 1st segment (equiv. to Scale*2). | 控制振荡器频率分布。0+xn 基本不反转第一个频段，而 1+xn 会。x+n 在某种程度上等同于将 Scale 翻倍。 |
+| **Freq Mode** | Controls oscillator frequency distribution. 0+xn: skips 1st segment inversion; 1+xn: inverts 1st segment (x+n equiv. to Scale*2 compare to x+2n). | 控制振荡器频率分布。0+xn 基本不反转第一个频段，而 1+xn 会。x+n 在某种程度上等同于将 Scale 翻倍。 |
 
 ## Install Plugin / 安装插件
 
