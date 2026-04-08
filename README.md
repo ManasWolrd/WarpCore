@@ -92,27 +92,21 @@ What you actually need to copy is the plugin bundle itself, not the `Release` or
 After extraction, the folder structure will look roughly like this:
 
 ```text
-plugin-win-vX.Y.Z.zip
-  plugin-win/
-    PluginName_artefacts/
-      VST3/
-        PluginName.vst3/
+pluginName-win-vX.Y.Z.zip
+  VST3/
+    PluginName.vst3/
 
-plugin-macos-vX.Y.Z.zip
-  plugin-macos/
-    PluginName_artefacts/
-      AU/
-        PluginName.component/
-      VST3/
-        PluginName.vst3/
+pluginName-macos-vX.Y.Z.zip
+  AU/
+    PluginName.component/
+  VST3/
+    PluginName.vst3/
 
-plugin-linux-vX.Y.Z.zip
-  plugin-linux/
-    PluginName_artefacts/
-      LV2/
-        PluginName.lv2/
-      VST3/
-        PluginName.vst3/
+pluginName-linux-vX.Y.Z.zip
+  LV2/
+    PluginName.lv2/
+  VST3/
+    PluginName.vst3/
 ```
 
 安装时请直接复制这些文件夹之一：  
