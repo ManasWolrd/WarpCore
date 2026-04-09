@@ -37,6 +37,10 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     ui::SetLableBlack(pitch_affect_label);
     addAndMakeVisible(pitch_affect_label);
 
+    fill_gap_.BindParam(apvt, "fill_gap");
+    fill_gap_.setTooltip("scale the filter cutoff to fill gaps when changing pitch parameter.\n*Off: a comb filter effect\n*On: bands overlay cause harsh sound");
+    addAndMakeVisible(fill_gap_);
+
     freq_mode_.BindParam(apvt, "freq_mode");
     freq_mode_.setTooltip("Set the frequency distribution.\n*voice mode is best for making robotic sounds.\n*music mode is best for making negative harmony sounds");
     addAndMakeVisible(freq_mode_);
@@ -58,7 +62,9 @@ void PluginUi::resized() {
     pitch_.setBounds(line.removeFromLeft(80));
     drywet_.setBounds(line.removeFromLeft(80));
 
+    fill_gap_.setBounds(b.removeFromRight(80).reduced(2));
     auto top_left_b = b.removeFromLeft(pitch_.getBounds().getX());
+
     pitch_affect_.setBounds(b.withWidth(pitch_.getWidth()).reduced(2));
     pitch_affect_label.setBounds(pitch_affect_.getBounds().translated(-100, 0).withWidth(100));
 

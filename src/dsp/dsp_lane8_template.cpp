@@ -608,73 +608,7 @@ static void Reset(warpcore::ProcessorState& state) noexcept {
 }
 
 static void Update(warpcore::ProcessorState& state, const warpcore::Param& p) noexcept {
-    state.num_warps = p.bands;
-    state.drywet = p.drywet;
-    state.pitch_affect = p.pitch_affect;
-    state.freq_distribution = p.freq_distribution;
-
-    float fhigh = p.f_high;
-    float fshit = p.pitch_affect ? -p.pitch_shift : p.pitch_shift;
-    fshit = std::exp2(fshit / 12.0f);
-
-    if (fhigh > 20000.0f) {
-        fhigh = state.fs / 2;
-    }
-    fhigh = std::min(fhigh, state.fs / 2);
-
-    float f_first_band_stop = fhigh / static_cast<float>(p.bands);
-    float f_first_band_center = f_first_band_stop / 2;
-
-    bool pitch_alas = !state.pitch_affect && p.pitch_shift > 0.0f;
-    bool formant_alas = state.pitch_affect && p.pitch_shift < 0.0f;
-
-    if (pitch_alas || formant_alas) {
-        f_first_band_stop *= fshit;
-        int max_bands = static_cast<int>(state.fs / 2.0f / f_first_band_stop);
-        state.num_warps = std::clamp(state.num_warps, 1, max_bands);
-    }
-
-    if (state.freq_distribution == FreqDistrbution::k0_n || state.freq_distribution == FreqDistrbution::k1_n) {
-        f_first_band_center *= 2;
-    }
-
-    state.pre_osc_phase_inc = f_first_band_center / state.fs;
-    state.post_osc_phase_inc = state.pre_osc_phase_inc * fshit;
-
-    if (p.pitch_affect) {
-        std::swap(state.pre_osc_phase_inc, state.post_osc_phase_inc);
-    }
-
-    // butterworth lowpass
-    float wbase = f_first_band_center * 2 * std::numbers::pi_v<float> / state.fs;
-    if (state.freq_distribution == FreqDistrbution::k0_n || state.freq_distribution == FreqDistrbution::k1_n) {
-        if (p.pitch_affect) {
-            wbase *= fshit;
-        }
-    }
-    else {
-        if (!p.pitch_affect) {
-            wbase *= fshit;
-        }
-    }
-    float filter_w = wbase * p.filter_scale;
-    filter_w = std::min(filter_w, std::numbers::pi_v<float> - 0.1f);
-
-    bool stop_smooth = state.poles != p.filter_order;
-    state.poles = p.filter_order;
-    state.SetFreq(filter_w, p.filter_order);
-    if (stop_smooth) {
-        state.svf256.Reset();
-        // 调整极点数量立刻赋值给滤波器，跳过所有平滑过程
-        state.StopSmooth();
-        for (int i = 0; i < state.poles; ++i) {
-            state.svf256.SetPole(i, state.w_[i], state.q_[i], state.analog_fmul);
-        }
-    }
-    else {
-        state.smooth_samples = state.total_smooth_samples;
-        state.BeginSmooth();
-    }
+    state.Update<simd::Float256>(p);
 }
 
 template <bool kSmooth>

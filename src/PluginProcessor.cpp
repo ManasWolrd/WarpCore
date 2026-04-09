@@ -74,10 +74,22 @@ EmptyAudioProcessor::EmptyAudioProcessor()
         auto p = std::make_unique<juce::AudioParameterBool>(
             juce::ParameterID{"pitch_affect", 1},
             "pitch_affect",
-            false
+            true
         );
         param_listener_.Add(p, [this](bool v) {
             param_.pitch_affect = v;
+            param_changed_ = true;
+        });
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterBool>(
+            juce::ParameterID{"fill_gap", 1},
+            "fill_gap",
+            false
+        );
+        param_listener_.Add(p, [this](bool v) {
+            param_.fill_gap = v;
             param_changed_ = true;
         });
         layout.add(std::move(p));

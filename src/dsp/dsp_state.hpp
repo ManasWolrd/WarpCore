@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <numbers>
 #include <complex>
 #include "pluginshared/simd.hpp"
@@ -42,6 +43,18 @@ enum class FreqDistrbution {
     k1_n,
     k0_2n,
     k1_2n,
+};
+
+struct Param {
+    int bands{50};
+    float f_high{24000.0f};
+    float filter_scale{1.0f};
+    int filter_order{2};
+    float pitch_shift{0.0f};
+    float drywet{1.0f};
+    bool pitch_affect{false};
+    bool fill_gap{false};
+    FreqDistrbution freq_distribution{FreqDistrbution::k0_2n};
 };
 
 struct ProcessorState {
@@ -117,18 +130,94 @@ struct ProcessorState {
             w_inc_[i] = (w_[i] - last_w_[i]) * inv_samples;
         }
     }
-};
 
-struct Param {
-    int bands;
-    float f_low;
-    float f_high;
-    float filter_scale;
-    int filter_order;
-    float pitch_shift;
-    float drywet;
-    bool pitch_affect;
-    FreqDistrbution freq_distribution;
+    template <class T>
+    void Update(const Param& p) noexcept {
+        num_warps = p.bands;
+        drywet = p.drywet;
+        pitch_affect = p.pitch_affect;
+        freq_distribution = p.freq_distribution;
+
+        float fhigh = p.f_high;
+        float fshit = p.pitch_affect ? -p.pitch_shift : p.pitch_shift;
+        fshit = std::exp2(fshit / 12.0f);
+
+        if (fhigh > 20000.0f) {
+            fhigh = fs / 2;
+        }
+        fhigh = std::min(fhigh, fs / 2);
+
+        float f_first_band_stop = fhigh / static_cast<float>(p.bands);
+        float f_first_band_center = f_first_band_stop / 2;
+
+        bool pitch_alas = !pitch_affect && p.pitch_shift > 0.0f;
+        bool formant_alas = pitch_affect && p.pitch_shift < 0.0f;
+
+        if (pitch_alas || formant_alas) {
+            f_first_band_stop *= fshit;
+            int max_bands = static_cast<int>(fs / 2.0f / f_first_band_stop);
+            max_bands = std::max(max_bands, 1);
+            num_warps = std::clamp(num_warps, 1, max_bands);
+        }
+
+        if (freq_distribution == FreqDistrbution::k0_n || freq_distribution == FreqDistrbution::k1_n) {
+            f_first_band_center *= 2;
+        }
+
+        pre_osc_phase_inc = f_first_band_center / fs;
+        post_osc_phase_inc = pre_osc_phase_inc * fshit;
+
+        if (p.pitch_affect) {
+            std::swap(pre_osc_phase_inc, post_osc_phase_inc);
+        }
+
+        // butterworth lowpass
+        float wbase = f_first_band_center * 2 * std::numbers::pi_v<float> / fs;
+        if (!p.fill_gap) {
+            bool mul1 = p.pitch_affect && p.pitch_shift > 0.0f;
+            bool mul2 = !p.pitch_affect && p.pitch_shift < 0.0f;
+            if (mul1 || mul2) {
+                wbase *= fshit;
+            }
+        }
+        else {
+            bool mul1 = p.pitch_affect && p.pitch_shift > 0.0f;
+            bool mul2 = !p.pitch_affect && p.pitch_shift < 0.0f;
+            if (!(mul1 || mul2)) {
+                wbase *= fshit;
+            }
+        }
+
+        float filter_w = wbase * p.filter_scale;
+        filter_w = std::min(filter_w, std::numbers::pi_v<float> - 0.1f);
+
+        bool stop_smooth = poles != p.filter_order;
+        poles = p.filter_order;
+        SetFreq(filter_w, p.filter_order);
+        if (stop_smooth) {
+            if constexpr (std::is_same_v<T, simd::Float256>) {
+                svf256.Reset();
+            }
+            else {
+                svf128.Reset();
+            }
+
+            // 调整极点数量立刻赋值给滤波器，跳过所有平滑过程
+            StopSmooth();
+            for (int i = 0; i < poles; ++i) {
+                if constexpr (std::is_same_v<T, simd::Float256>) {
+                    svf256.SetPole(i, w_[i], q_[i], analog_fmul);
+                }
+                else {
+                    svf128.SetPole(i, w_[i], q_[i], analog_fmul);
+                }
+            }
+        }
+        else {
+            smooth_samples = total_smooth_samples;
+            BeginSmooth();
+        }
+    }
 };
 
 struct ProcessorDsp {
