@@ -3,7 +3,7 @@
 This project attempts to recreate the effect style of Prosoniq PiWarp or Zynaptiq Wormhole.
 
 WarpCore 是一个`多段频谱反转`插件，类似于 PiWarp/Wormhole 的`时域局部频谱反转`效果。  
-WarpCore is a `multi-band spectrum inversion` plugin, similar to the `local time-domain spectrum inversion` effect of PiWarp/Wormhole.
+WarpCore is a `multi-band spectrum inversion` plugin, similar to the `time-domain local spectrum inversion` effect of PiWarp/Wormhole.
 
 如果你想了解如何做到反转频谱，这里是我参考的资源。  
 If you want to know how to reverse the spectrum, here are the resources I referred to.  
@@ -49,7 +49,7 @@ zero latency with some nonlinear phase from butterworth filter.
 > 如果你想要一个接近默认Piwarp的预设，设置参数为  
 > **Warp** = 50  
 > **Freq High** = Full  
-> **Scale** = 1.5  
+> **Scale** = 1.0  
 > **Poles** = 3  
 > **Pitch** = 0  
 > **DryWet** = 1  
@@ -69,7 +69,7 @@ Double-clicking the knob will also reset it to the default value.
 It seems that many people cannot understand the parameters of WarpCore, so here is an additional explanation:  
 似乎很多人不能理解WarpCore的参数，在这里增加说明  
 
-| 参数 (Parameter) | 英文说明 (English Description) | 中文说明 (Chinese Description) |
+| 参数 (Parameter) | English Description | 中文说明 |
 | :--- | :--- | :--- |
 | **Warp** | Divides the spectrum from 0 to FreqHigh into this number of segments and applies spectral inversion separately to each segment. | 将 0 ~ FreqHigh 的频谱分割为该参数指定的段数，对每个段分别进行光谱反转。 |
 | **Freq High** | Sets the highest frequency for the inverted spectrum; audio above this frequency will be filtered out (silenced). | 设置反转频谱的最高频率，超过此频率的音频将会被过滤（静音）。 |
@@ -79,6 +79,7 @@ It seems that many people cannot understand the parameters of WarpCore, so here 
 | **Dry/Wet** | Mixes dry and inverted wet signals. Nonlinear phase may cause notch filtering or peculiar phase cancellations. | 混合干声与反转湿声。由于滤波器的非线性相位，可能会产生陷波或奇特的相位抵消。 |
 | **Formant Mode** | Controls whether pitch affects the pre-oscillator or the post-oscillator (see **Pitch** explanation). | 控制 Pitch 作用于前振荡器还是后振荡器，具体效果参考 **Pitch** 参数说明。 |
 | **Freq Mode** | Controls oscillator frequency distribution. 0+xn: skips 1st segment inversion; 1+xn: inverts 1st segment (x+n equiv. to Scale*2 compare to x+2n). | 控制振荡器频率分布。0+xn 基本不反转第一个频段，而 1+xn 会。x+n 在某种程度上等同于将 Scale 翻倍。 |
+| **FillGap** | Controls filter scale follow **pitch** parameter. create combfilter or bands overlay. | 控制滤波器频率缩放是否跟随**pitch**参数，这会导致梳妆滤波或者重叠的频率段。 |
 
 ## Install Plugin / 安装插件
 
