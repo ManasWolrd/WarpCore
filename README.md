@@ -83,14 +83,8 @@ It seems that many people cannot understand the parameters of WarpCore, so here 
 
 ## Install Plugin / 安装插件
 
-GitHub Release 里的 zip 是按平台分别打包的，解压后目录会多一层平台文件夹，这个是正常的。  
-GitHub Release zip files are packaged per platform, so it is normal to see one extra platform folder after extraction.
-
-你真正需要复制的是插件 bundle 本身，不是 `Release` 或 `VST3` / `AU` / `LV2` 这一层目录。  
-What you actually need to copy is the plugin bundle itself, not the `Release` or `VST3` / `AU` / `LV2` folder that contains it.
-
-解压后大致会看到这样的结构：  
-After extraction, the folder structure will look roughly like this:
+从Release下载对应操作系统的压缩包，解压后大致会看到这样的结构  
+Download the compressed package for the corresponding operating system from Release. After extracting it, you will generally see a structure like this:  
 
 ```text
 pluginName-win-vX.Y.Z.zip
