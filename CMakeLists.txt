@@ -148,56 +148,31 @@ if(APPLE)
 endif()
 
 # ----------------------------------------
-# audiofft
+# audiofft, WarpCore doesn't use it
 # ----------------------------------------
-add_library(audiofft STATIC libs/AudioFFT/AudioFFT.cpp libs/AudioFFT/AudioFFTcpx.cpp)
-target_include_directories(audiofft PUBLIC libs/AudioFFT)
-target_link_libraries(${PROJECT_NAME} PRIVATE audiofft)
-# fft lib for audio fft
-if(APPLE)
-    # use vDSP
-    target_link_libraries(audiofft PRIVATE "-framework Accelerate")
-    target_compile_definitions(audiofft PRIVATE AUDIOFFT_APPLE_ACCELERATE)
-else()
-    if (UNIX)
-        set(IPP_DIR "/opt/intel/oneapi/ipp/latest/lib/cmake/ipp")
-    endif()
-    find_package(IPP QUIET)
-
-    if(NOT IPP_FOUND)
-        # use CI Intel IPP
-        if(WIN32)
-            set(CI_IPP_ROOT "$ENV{USERPROFILE}/.nuget/packages/intelipp.static.win-x64/2022.3.0.387")
-            set(CI_IPP_INC "${CI_IPP_ROOT}/build/native/include/ipp")
-            set(CI_IPP_LIB "${CI_IPP_ROOT}/build/native/win-x64/")
-            set(CI_IPP_LIBS ippsmt ippcoremt ippimt ippcvmt ippvmmt)
-        elseif(UNIX)
-            set(CI_IPP_ROOT "/opt/intel/oneapi/ipp/latest")
-            set(CI_IPP_INC "${CI_IPP_ROOT}/include")
-            set(CI_IPP_LIB "${CI_IPP_ROOT}/lib/intel64")
-            set(CI_IPP_LIBS ipps ippcore ippi ippcv ippvm)
-        endif()
-
-        if(EXISTS "${CI_IPP_INC}")
-            set(IPP_FOUND TRUE)
-        endif()
-
-        if(IPP_FOUND)
-            message(STATUS "AudioFFT: Using Intel IPP")
-            target_include_directories(audiofft PRIVATE ${CI_IPP_INC})
-            target_link_directories(audiofft PUBLIC ${CI_IPP_LIB})
-            target_link_libraries(audiofft PUBLIC ${CI_IPP_LIBS})
-            target_compile_definitions(audiofft PRIVATE AUDIOFFT_INTEL_IPP)
-        else()
-            message(WARNING "AudioFFT: IPP not found, using default Ooura implementation")
-        endif()
-    else()
-        # use IPP on developer's pc
-        message(STATUS "AudioFFT: Using Intel IPP")
-        target_link_libraries(audiofft PUBLIC ${IPP_LIBRARIES})
-        target_compile_definitions(audiofft PRIVATE AUDIOFFT_INTEL_IPP)
-    endif()
-endif()
+# add_library(audiofft STATIC libs/AudioFFT/AudioFFT.cpp libs/AudioFFT/AudioFFTcpx.cpp)
+# target_include_directories(audiofft PUBLIC libs/AudioFFT)
+# target_link_libraries(${PROJECT_NAME} PRIVATE audiofft)
+# # fft lib for audio fft
+# if(APPLE)
+#     # use vDSP
+#     target_link_libraries(audiofft PRIVATE "-framework Accelerate")
+#     target_compile_definitions(audiofft PRIVATE AUDIOFFT_APPLE_ACCELERATE)
+# else()
+#     if (UNIX)
+#         set(IPP_DIR "/opt/intel/oneapi/ipp/latest/lib/cmake/ipp")
+#     endif()
+#     find_package(IPP QUIET)
+#
+#     if(NOT IPP_FOUND)
+#         message(WARNING "AudioFFT: IPP not found, using default Ooura implementation")
+#     else()
+#         # use IPP on developer's pc
+#         message(STATUS "AudioFFT: Using Intel IPP")
+#         target_link_libraries(audiofft PUBLIC ${IPP_LIBRARIES})
+#         target_compile_definitions(audiofft PRIVATE AUDIOFFT_INTEL_IPP)
+#     endif()
+# endif()
 
 if(DEFINED DBUILD_IN_CI)
     target_compile_definitions(${PROJECT_NAME} PRIVATE DBUILD_IN_CI=1)

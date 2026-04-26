@@ -42,7 +42,7 @@ zero latency with some nonlinear phase from butterworth filter.
 
 ## 图形界面(GUI)
 
-![display](doc/gui.png)
+![display](docs/gui.png)
 
 > [!TIP]
 > if you want a close preset to **default Piwarp**, set paramter  

@@ -96,6 +96,10 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install cmake ninja
 
+      - name: Install Rosetta 2
+        if: runner.os == 'macOS'
+        run: softwareupdate --install-rosetta --agree-to-license
+
       ##### config and build #####
       - name: Checkout code
         uses: actions/checkout@v6
@@ -154,7 +158,13 @@ jobs:
         shell: bash
         run: |
           TEST_TARGET="${{ env.VST3_PATH }}"
-          ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+          if [[ "${{ matrix.macos_arch }}" == "x86_64" ]]; then
+            echo "Running pluginval under Rosetta (x86_64)..."
+            arch -x86_64 ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+          else
+            ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+          fi
+          # ${{ matrix.pluginval-binary }} --verbose --validate "$TEST_TARGET" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
         env:
           STRICTNESS_LEVEL: 10
           REPEAT: 3
@@ -178,7 +188,11 @@ jobs:
           killall -9 AudioComponentRegistrar || true
           sleep 2
 
-          ${{ matrix.pluginval-binary }} --verbose --validate "$USER_COMPONENTS_DIR/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+          if [[ "${{ matrix.macos_arch }}" == "x86_64" ]]; then
+            arch -x86_64 ${{ matrix.pluginval-binary }} --verbose --validate "$USER_COMPONENTS_DIR/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+          else
+            ${{ matrix.pluginval-binary }} --verbose --validate "$USER_COMPONENTS_DIR/$AU_FILE_NAME" --disabled-tests "${{ env.PLUGINVAL_DISABLED }}"
+          fi
         env:
           STRICTNESS_LEVEL: 10
           TIMEOUT_MS: 1440000
@@ -207,7 +221,11 @@ jobs:
             echo "Validating Component $i: Type='$TYPE', Subtype='$SUBT', Manu='$MANU'"
             echo "-----------------------------------------------"
 
+          if [[ "${{ matrix.macos_arch }}" == "x86_64" ]]; then
+            arch -x86_64 auval -v "$TYPE" "$SUBT" "$MANU"
+          else
             auval -v "$TYPE" "$SUBT" "$MANU"
+          fi
           done
 
       ##### upload artifacts (after successful tests) #####

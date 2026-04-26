@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "global.hpp"
+#include "BinaryData.h"
 
 //==============================================================================
 EmptyAudioProcessor::EmptyAudioProcessor()
@@ -12,6 +13,8 @@ EmptyAudioProcessor::EmptyAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
       ) {
+    dsp_processor_ = warpcore::GetProcessorDsp();
+
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
     {
@@ -142,8 +145,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
     preset_manager_ = std::make_unique<pluginshared::PresetManager>(*value_tree_, *this, pluginshared::UpdateData::GithubInfo{
         global::kPluginRepoOwnerName, global::kPluginRepoName
     });
-
-    dsp_processor_ = warpcore::GetProcessorDsp();
+    preset_manager_->AddFactoryPreset(BinaryData::piwarp_xml, BinaryData::piwarp_xmlSize, "PiWarp Like");
 }
 
 EmptyAudioProcessor::~EmptyAudioProcessor() {
