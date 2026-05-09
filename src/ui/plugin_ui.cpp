@@ -1,9 +1,11 @@
 #include "plugin_ui.hpp"
 
 #include "../PluginProcessor.h"
+#include "../PluginEditor.h"
 
 PluginUi::PluginUi(EmptyAudioProcessor& p)
-    : preset_(*p.preset_manager_) {
+    : tooltip_(this, 500)
+    , preset_(*p.preset_manager_) {
     addAndMakeVisible(preset_);
     preset_.SetDspInstName(p.dsp_processor_.name);
 
@@ -48,6 +50,11 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     addAndMakeVisible(freq_label_);
 
     setSize(480, 160);
+    tooltip_.setLookAndFeel(ui::GetLookAndFeel());
+}
+
+PluginUi::~PluginUi() {
+    tooltip_.setLookAndFeel(nullptr);
 }
 
 void PluginUi::resized() {
@@ -74,4 +81,10 @@ void PluginUi::resized() {
 
 void PluginUi::paint(juce::Graphics& g) {
     juce::ignoreUnused(g);
+}
+
+void PluginUi::TrySetSize(int width, int height) {
+    if (auto p = findParentComponentOfClass<EmptyAudioProcessorEditor>(); p != nullptr) {
+        p->SetNewSize(width, height);
+    }
 }

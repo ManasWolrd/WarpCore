@@ -14,6 +14,9 @@ struct SvfLaneN {
     std::array<float, global::kMaxPoles> g{};
     std::array<float, global::kMaxPoles> d{};
 
+    // flat svf filter
+    // [pole pole], [pole, pole]
+    // each [] is a parralle simd::LaneSize<SimdT> filter
     struct SvfState {
        SimdT s1_re_l;
        SimdT s1_re_r;

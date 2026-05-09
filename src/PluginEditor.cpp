@@ -26,7 +26,6 @@ static_assert(std::is_base_of_v<juce::Component, PluginUi>, "PluginUi must inher
 
 EmptyAudioProcessorEditor::EmptyAudioProcessorEditor(EmptyAudioProcessor& p)
     : AudioProcessorEditor(&p)
-    , tooltip_(this, 500)
     , ui_(p) {
     auto ui_bound = ui_.getLocalBounds();
     if (ui_bound.isEmpty()) {
@@ -47,22 +46,10 @@ EmptyAudioProcessorEditor::EmptyAudioProcessorEditor(EmptyAudioProcessor& p)
     setResizable(true, true);
     getConstrainer()->setFixedAspectRatio(static_cast<float>(ui_width_) / static_cast<float>(ui_height_));
     setResizeLimits(ui_width_, ui_height_, 9999, 9999);
-
-    ui_.on_want_new_size = [this](int width, int height) {
-        ui_width_ = width;
-        ui_height_ = height;
-        ui_.setSize(width, height);
-        getConstrainer()->setFixedAspectRatio(static_cast<float>(ui_width_) / static_cast<float>(ui_height_));
-        setSize(static_cast<int>(static_cast<float>(width) * scale_),
-                static_cast<int>(static_cast<float>(height) * scale_));
-    };
     addAndMakeVisible(ui_);
-
-    tooltip_.setLookAndFeel(ui::GetLookAndFeel());
 }
 
 EmptyAudioProcessorEditor::~EmptyAudioProcessorEditor() {
-    tooltip_.setLookAndFeel(nullptr);
 }
 
 //==============================================================================
@@ -79,4 +66,13 @@ void EmptyAudioProcessorEditor::resized() {
             props->setValue("scale", scale_);
         }
     }
+}
+
+void EmptyAudioProcessorEditor::SetNewSize(int width, int height) {
+    ui_width_ = width;
+    ui_height_ = height;
+    ui_.setSize(width, height);
+    getConstrainer()->setFixedAspectRatio(static_cast<float>(ui_width_) / static_cast<float>(ui_height_));
+    setSize(static_cast<int>(static_cast<float>(width) * scale_),
+            static_cast<int>(static_cast<float>(height) * scale_));
 }
