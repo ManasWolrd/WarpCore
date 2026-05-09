@@ -6,8 +6,10 @@ cmake_minimum_required(VERSION 3.22.1)
 set(TEAM_NAME ManasWolrd)
 set(PLUGIN_REPO_URL "https://github.com/ManasWolrd/WarpCore")
 set(PLUGIN_NAME WarpCore)
-set(PLUGIN_VERSION 0.0.11)
+set(PLUGIN_VERSION 0.0.12)
 set(PLUGIN_BUNDLE_ID "com.ManasWolrd.${PLUGIN_NAME}")
+string(SUBSTRING plugin_codes ${PLUGIN_NAME} 0 4)
+string(SUBSTRING plugin_manufacturer_code ${TEAM_NAME} 0 4)
 
 option(BUILD_STANDALONE "Build Standalone plugin format" ON)
 option(BUILD_VST3 "Build VST3 plugin format" ON)
@@ -25,9 +27,6 @@ add_compile_definitions(PROJECT_VERSION="${PROJECT_VERSION}")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_XCODE_GENERATE_SCHEME OFF)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-string(SUBSTRING plugin_codes ${PLUGIN_NAME} 0 4)
-string(SUBSTRING plugin_manufacturer_code ${TEAM_NAME} 0 4)
 
 add_subdirectory(libs/JUCE)
 
