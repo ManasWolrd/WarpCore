@@ -1,4 +1,10 @@
 # WarpCore
+
+> [!IMPORTANT]
+> please goto [dev-plugin](https://github.com/ManasWolrd/dev-plugins) repo for new version
+
+---
+
 尝试重现 Prosoniq PiWarp 或 Zynaptiq Wormhole 插件的效果。  
 This project attempts to recreate the effect style of Prosoniq PiWarp or Zynaptiq Wormhole.
 
